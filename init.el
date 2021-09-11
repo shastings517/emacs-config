@@ -1,853 +1,798 @@
-;;; package --- Summary:
-;;; Commentary:
-;;; evil editing with SPC leader key
-;;; Code:
-;; set up package repositories
+;; NOTE: init.el is now generated from Emacs.org.  Please edit that file
+;;       in Emacs and init.el will be generated automatically!
+
+;; You will most likely need to adjust this font size for your system!
+(defvar efs/default-font-size 180)
+(defvar efs/default-variable-font-size 180)
+
+;; Make frame transparency overridable
+(defvar efs/frame-transparency '(90 . 90))
+
+;; The default is 800 kilobytes.  Measured in bytes.
+(setq gc-cons-threshold (* 50 1000 1000))
+
+(defun efs/display-startup-time ()
+  (message "Emacs loaded in %s with %d garbage collections."
+           (format "%.2f seconds"
+                   (float-time
+                     (time-subtract after-init-time before-init-time)))
+           gcs-done))
+
+(add-hook 'emacs-startup-hook #'efs/display-startup-time)
+
+;; Initialize package sources
 (require 'package)
-(setq package-enable-at-startup nil)
-(add-to-list 'package-archives
-         '("melpa" . "https://melpa.org/packages/"))
-(add-to-list 'package-archives
-        '("gnu" . "http://elpa.gnu.org/packages/"))
-(add-to-list 'package-archives
-        '("marmalade" . "http://marmalade-repo.org/packages/"))
-;; (add-to-list 'package-archives
-;;         '("melpa" . "http://melpa.milkbox.net/packages/"))
-(add-to-list 'package-archives
-        '("org" . "http://orgmode.org/elpa/") t)
+
+(setq package-archives '(("melpa" . "https://melpa.org/packages/")
+                         ("org" . "https://orgmode.org/elpa/")
+                         ("elpa" . "https://elpa.gnu.org/packages/")))
+
 (package-initialize)
-;; https://github.com/jwiegley/use-package
-;; better package management
+(unless package-archive-contents
+  (package-refresh-contents))
+
+  ;; Initialize use-package on non-Linux platforms
 (unless (package-installed-p 'use-package)
-  (package-refresh-contents)
   (package-install 'use-package))
-;;;;;;;;;;;;;;
-;; packages ;;
-;;;;;;;;;;;;;;
+
+(require 'use-package)
+(setq use-package-always-ensure t)
+
+(use-package auto-package-update
+  :custom
+  (auto-package-update-interval 7)
+  (auto-package-update-prompt-before-update t)
+  (auto-package-update-hide-results t)
+  :config
+  (auto-package-update-maybe)
+  (auto-package-update-at-time "09:00"))
+
+;; NOTE: If you want to move everything out of the ~/.emacs.d folder
+;; reliably, set `user-emacs-directory` before loading no-littering!
+;(setq user-emacs-directory "~/.cache/emacs")
+
+(use-package no-littering)
+
+;; no-littering doesn't set this by default so we must place
+;; auto save files in the same path as it uses for sessions
+(setq auto-save-file-name-transforms
+      `((".*" ,(no-littering-expand-var-file-name "auto-save/") t)))
+
+(setq inhibit-startup-message t)
+
+  (scroll-bar-mode -1)        ; Disable visible scrollbar
+  (tool-bar-mode -1)          ; Disable the toolbar
+  (tooltip-mode -1)           ; Disable tooltips
+  (set-fringe-mode 10)        ; Give some breathing room
+
+  (menu-bar-mode -1)            ; Disable the menu bar
+
+  ;; disable emacs bell
+  (setq ring-bell-function 'ignore)
+
+  (column-number-mode)
+  (global-display-line-numbers-mode t)
+
+  ;; Set frame transparency
+  (set-frame-parameter (selected-frame) 'alpha efs/frame-transparency)
+  (add-to-list 'default-frame-alist `(alpha . ,efs/frame-transparency))
+  (set-frame-parameter (selected-frame) 'fullscreen 'maximized)
+  (add-to-list 'default-frame-alist '(fullscreen . maximized))
+
+  ;; Disable line numbers for some modes
+  (dolist (mode '(org-mode-hook
+                  term-mode-hook
+                  shell-mode-hook
+                  treemacs-mode-hook
+                  eshell-mode-hook))
+    (add-hook mode (lambda () (display-line-numbers-mode 0))))
+
+(setq insert-directory-program "gls" dired-use-ls-dired t)
+(setq dired-listing-switches "-al --group-directories-first")
+
 ;; https://github.com/purcell/exec-path-from-shell
 ;; fix emacs path on mac
 (use-package exec-path-from-shell
   :if (memq window-system '(mac ns x))
-  :ensure t
   :config
   (exec-path-from-shell-initialize))
+
 ;; https://github.com/codesuki/add-node-modules-path/tree/master
 ;; adds the node_modules/.bin directory to the buffer exec_path. E.g. support project local eslint installations.
 (use-package add-node-modules-path
-  :ensure t
   :hook ((js2-mode . add-node-modules-path)
          (rjsx-mode . add-node-modules-path)))
-;; https://github.com/justbur/emacs-which-key
-;; displays available keybindings in popup
-(use-package which-key
-  :ensure t
+
+(set-face-attribute 'default nil :font "Fira Code Retina" :height efs/default-font-size)
+
+;; Set the fixed pitch face
+(set-face-attribute 'fixed-pitch nil :font "Fira Code Retina" :height efs/default-font-size)
+
+;; Set the variable pitch face
+(set-face-attribute 'variable-pitch nil :font "Cantarell" :height efs/default-variable-font-size :weight 'regular)
+
+;; Make ESC quit prompts
+(global-set-key (kbd "<escape>") 'keyboard-escape-quit)
+
+;; switch meta to mac command
+(setq mac-option-key-is-meta nil
+    mac-command-key-is-meta t
+    mac-command-modifier 'meta
+    mac-option-modifier 'control)
+
+(use-package general
+  :after evil
   :config
-  (which-key-mode))
-;; https://github.com/emacs-dashboard/emacs-dashboard
-;; custom dashboard
-(use-package dashboard
-  :ensure t
-  :config
-  (dashboard-setup-startup-hook))
-;; https://github.com/victorhge/iedit
-;; edit multiple regions simultaneously
-(use-package iedit
-  :ensure t)
-;; https://www.gnu.org/software/emacs/manual/html_mono/ido.html
-;; find files and directories
-(use-package ido
-  :ensure t
-  :config
-  (setq ido-enable-flex-matching t))
-;; https://github.com/deb0ch/emacs-winum
-;; window numbers for navigation
-(use-package winum
-  :ensure t
+  (general-create-definer zmax/leader-keys
+    :keymaps '(normal insert visual emacs)
+    :prefix "SPC"
+    :global-prefix "C-SPC")
+
+  (zmax/leader-keys
+    "SPC" '(counsel-M-x :which-key "M-x")
+    "e"   '(:ignore t :which-key "eval")
+    "eb"  '(eval-buffer :which-key "eval buffer")
+    "t"  '(:ignore t :which-key "toggles")
+    "tt" '(counsel-load-theme :which-key "choose theme")
+    "f"  '(:ignore t :which-key "files")
+    "fs" '(save-buffer :which-key "file save")
+    "ff" '(counsel-find-file :which-key "find files")
+    "fde" '(lambda () (interactive) (find-file (expand-file-name "~/.emacs.d/Emacs.org")))
+    "s"  '(:ignore t :which-key "search")
+    "sp"  '(counsel-projectile-ag :which-key "search project")
+    "se"  '(evil-iedit-state/iedit-mode :which-key "evil iedit")
+    "w"  '(:ignore t :which-key "window")
+    "w/"  '(split-window-right :which-key "split right")
+    "w-"  '(split-window-below :which-key "split bottom")
+    "wv"  '(evil-window-vnew :which-key "new vertical window")
+    "wh"  '(evil-window-new :which-key "new horizontal window")
+    "wd"  '(delete-window :which-key "delete window")
+    "qq"  '(kill-emacs :which-key "quit")))
+
+(use-package evil
   :init
-  (setq-default winum-keymap nil)
+  (setq evil-want-integration t)
+  (setq evil-want-keybinding nil)
+  (setq evil-want-C-u-scroll t)
+  (setq evil-want-C-i-jump nil)
   :config
-  (winum-mode))
-;; https://magit.vc/
-;; git porcelain
-(use-package magit
-  :ensure t)
+  (evil-mode 1)
+  (define-key evil-insert-state-map (kbd "C-g") 'evil-normal-state)
+  (define-key evil-insert-state-map (kbd "C-h") 'evil-delete-backward-char-and-join)
 
-;; https://github.com/syohex/emacs-anzu
-;; minor mode that provides search matches
-(use-package anzu
-  :ensure t
+  ;; Use visual line motions even outside of visual-line-mode buffers
+  (evil-global-set-key 'motion "j" 'evil-next-visual-line)
+  (evil-global-set-key 'motion "k" 'evil-previous-visual-line)
+
+  (evil-set-initial-state 'messages-buffer-mode 'normal)
+  (evil-set-initial-state 'dashboard-mode 'normal))
+
+(use-package evil-collection
+  :after evil
   :config
-  (global-anzu-mode 1)
-  (global-set-key [remap query-replace-regexp] 'anzu-query-replace-regexp)
-  (global-set-key [remap query-replace] 'anzu-query-replace))
+  (evil-collection-init))
 
-;; https://github.com/bbatsov/zenburn-emacs
-;; zenburn color theme
-;; (use-package zenburn-theme
-;;   :ensure t
-;;   :config
-;;   (load-theme 'zenburn t))
-;; doom themes
-(use-package doom-themes
+  ;; https://github.com/syl20bnr/evil-escape
+  ;; customizable key sequence to escape states
+  (use-package evil-escape
+  :after evil
   :ensure t
-  :config
-  ;; Global settings (defaults)
-  (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
-        doom-themes-enable-italic t) ; if nil, italics is universally disabled
-  (load-theme 'doom-one t)
-
-  ;; Enable flashing mode-line on errors
-  (doom-themes-visual-bell-config)
-  
-  ;; Enable custom neotree theme (all-the-icons must be installed!)
-  ;; (doom-themes-neotree-config)
-  ;; or for treemacs users
-  ;; (setq doom-themes-treemacs-theme "doom-colors") ; use the colorful treemacs theme
-  ;; (doom-themes-treemacs-config)
-  
-  ;; Corrects (and improves) org-mode's native fontification.
-  (doom-themes-org-config))
-
-;; https://github.com/flycheck/flycheck
-;; on the fly syntax checking
-(use-package flycheck
-  :ensure t
-  :init (global-flycheck-mode))
-;; https://github.com/TheBB/spaceline
-;; powerline theme
-;; (use-package spaceline
-;;   :demand t
-;;   :init
-;;   (setq powerline-default-separator 'wave)
-;;   :config
-;;   (require 'spaceline-config)
-;;   (spaceline-spacemacs-theme))
-(use-package spaceline
-  :ensure t
-  :init
-  (require 'spaceline-config)
-  (setq spaceline-highlight-face-func 'spaceline-highlight-face-evil-state)
   :config
   (progn
-    (spaceline-define-segment buffer-id
-      (if (buffer-file-name)
-          (let ((project-root (projectile-project-p)))
-            (if project-root
-                (file-relative-name (buffer-file-name) project-root)
-              (abbreviate-file-name (buffer-file-name))))
-        (powerline-buffer-id)))
-    (spaceline-spacemacs-theme)
-    (spaceline-toggle-minor-modes-off)))
+      (evil-escape-mode)
+      (setq-default evil-escape-key-sequence "fd")))
 
-;; (use-package spaceline-all-the-icons
-;;   :after spaceline
-;;   :config (spaceline-all-the-icons-theme))
-;; https://github.com/emacs-helm/helm
-;; incremental completion and selection narrowing framework
-(use-package helm
-  :ensure t
-  :init
-  
-  ; (defun helm-hide-minibuffer-maybe ()
-  ;   (when (with-helm-buffer helm-echo-input-in-header-line)
-  ;     (let ((ov (make-overlay (point-min) (point-max) nil nil t)))
-  ;       (overlay-put ov 'window (selected-window))
-  ;       (overlay-put ov 'face (let ((bg-color (face-background 'default nil)))
-  ;                               `(:background ,bg-color :foreground ,bg-color)))
-  ;       (setq-local cursor-type nil))))
-  ; (add-hook 'helm-minibuffer-set-up-hook 'helm-hide-minibuffer-maybe)
+(use-package command-log-mode
+  :commands command-log-mode)
+
+(use-package doom-themes
+  :init (load-theme 'doom-palenight t))
+
+(use-package all-the-icons)
+
+(use-package doom-modeline
+  :init (doom-modeline-mode 1)
+  :custom ((doom-modeline-height 15)))
+
+(use-package which-key
+  :defer 0
+  :diminish which-key-mode
   :config
-  (setq helm-M-x-fuzzy-match t
-    helm-mode-fuzzy-match t
-    helm-buffers-fuzzy-matching t
-    helm-recentf-fuzzy-match t
-    helm-locate-fuzzy-match t
-    helm-semantic-fuzzy-match t
-    helm-imenu-fuzzy-match t
-    helm-completion-in-region-fuzzy-match t
-    helm-candidate-number-list 80
-    ; helm-mode-line-string nil
-    ; helm-display-header-line nil
-    helm-split-window-in-side-p t
-    helm-move-to-line-cycle-in-source nil
-    ; helm-echo-input-in-header-line t
-    helm-autoresize-max-height 0
-    helm-autoresize-min-height 20)
-  (helm-mode 1))
-;; https://github.com/cosmicexplorer/helm-rg
-;; ripgrep helm interface
-(use-package helm-rg :ensure t)
-;; https://github.com/bbatsov/projectile
-;; project interaction framework
-(use-package projectile
-  :ensure t
-  :init
-  (setq projectile-require-project-root nil)
+  (which-key-mode)
+  (setq which-key-idle-delay 1))
+
+(use-package ivy
+  :diminish
+  :bind (("C-s" . swiper)
+         :map ivy-minibuffer-map
+         ("TAB" . ivy-alt-done)
+         ("C-l" . ivy-alt-done)
+         ("C-j" . ivy-next-line)
+         ("C-k" . ivy-previous-line)
+         :map ivy-switch-buffer-map
+         ("C-k" . ivy-previous-line)
+         ("C-l" . ivy-done)
+         ("C-d" . ivy-switch-buffer-kill)
+         :map ivy-reverse-i-search-map
+         ("C-k" . ivy-previous-line)
+         ("C-d" . ivy-reverse-i-search-kill))
   :config
-  (projectile-mode 1))
-;; https://github.com/bbatsov/helm-projectile
-;; projectile helm interface
-(use-package helm-projectile
-  :ensure t
+  (ivy-mode 1))
+
+(use-package ivy-rich
+  :after ivy
   :init
-  (setq helm-projectile-fuzzy-match t)
+  (ivy-rich-mode 1))
+
+(use-package counsel
+  :bind (("C-M-j" . 'counsel-switch-buffer)
+         :map minibuffer-local-map
+         ("C-r" . 'counsel-minibuffer-history))
+  :custom
+  (counsel-linux-app-format-function #'counsel-linux-app-format-function-name-only)
   :config
-  (helm-projectile-on))
-;; https://github.com/syohex/emacs-helm-ag
-;; silver searcher helm interface
-(use-package helm-ag
-  :ensure t)
-;; https://github.com/mooz/js2-mode
-;; major mode for editing .js files
+  (counsel-mode 1))
+
+(use-package ivy-prescient
+  :after counsel
+  :custom
+  (ivy-prescient-enable-filtering nil)
+  :config
+  ;; Uncomment the following line to have sorting remembered across sessions!
+  ;(prescient-persist-mode 1)
+  (ivy-prescient-mode 1))
+
+(use-package helpful
+  :commands (helpful-callable helpful-variable helpful-command helpful-key)
+  :custom
+  (counsel-describe-function-function #'helpful-callable)
+  (counsel-describe-variable-function #'helpful-variable)
+  :bind
+  ([remap describe-function] . counsel-describe-function)
+  ([remap describe-command] . helpful-command)
+  ([remap describe-variable] . counsel-describe-variable)
+  ([remap describe-key] . helpful-key))
+
+(use-package hydra
+  :defer t)
+
+(defhydra hydra-text-scale (:timeout 4)
+  "scale text"
+  ("j" text-scale-increase "in")
+  ("k" text-scale-decrease "out")
+  ("f" nil "finished" :exit t))
+
+(zmax/leader-keys
+  "ts" '(hydra-text-scale/body :which-key "scale text"))
+
+(defun efs/org-font-setup ()
+  ;; Replace list hyphen with dot
+  (font-lock-add-keywords 'org-mode
+                          '(("^ *\\([-]\\) "
+                             (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
+
+  ;; Set faces for heading levels
+  (dolist (face '((org-level-1 . 1.2)
+                  (org-level-2 . 1.1)
+                  (org-level-3 . 1.05)
+                  (org-level-4 . 1.0)
+                  (org-level-5 . 1.1)
+                  (org-level-6 . 1.1)
+                  (org-level-7 . 1.1)
+                  (org-level-8 . 1.1)))
+    (set-face-attribute (car face) nil :font "Cantarell" :weight 'regular :height (cdr face)))
+
+  ;; Ensure that anything that should be fixed-pitch in Org files appears that way
+  (set-face-attribute 'org-block nil    :foreground nil :inherit 'fixed-pitch)
+  (set-face-attribute 'org-table nil    :inherit 'fixed-pitch)
+  (set-face-attribute 'org-formula nil  :inherit 'fixed-pitch)
+  (set-face-attribute 'org-code nil     :inherit '(shadow fixed-pitch))
+  (set-face-attribute 'org-table nil    :inherit '(shadow fixed-pitch))
+  (set-face-attribute 'org-verbatim nil :inherit '(shadow fixed-pitch))
+  (set-face-attribute 'org-special-keyword nil :inherit '(font-lock-comment-face fixed-pitch))
+  (set-face-attribute 'org-meta-line nil :inherit '(font-lock-comment-face fixed-pitch))
+  (set-face-attribute 'org-checkbox nil  :inherit 'fixed-pitch)
+  (set-face-attribute 'line-number nil :inherit 'fixed-pitch)
+  (set-face-attribute 'line-number-current-line nil :inherit 'fixed-pitch))
+
+(defun efs/org-mode-setup ()
+  (org-indent-mode)
+  (variable-pitch-mode 1)
+  (visual-line-mode 1))
+
+(use-package org
+  :pin org
+  :commands (org-capture org-agenda)
+  :hook (org-mode . efs/org-mode-setup)
+  :config
+  (setq org-ellipsis " ▾")
+
+  (setq org-agenda-start-with-log-mode t)
+  (setq org-log-done 'time)
+  (setq org-log-into-drawer t)
+
+  (setq org-agenda-files
+        '("~/Projects/Code/emacs-from-scratch/OrgFiles/Tasks.org"
+          "~/Projects/Code/emacs-from-scratch/OrgFiles/Habits.org"
+          "~/Projects/Code/emacs-from-scratch/OrgFiles/Birthdays.org"))
+
+  (require 'org-habit)
+  (add-to-list 'org-modules 'org-habit)
+  (setq org-habit-graph-column 60)
+
+  (setq org-todo-keywords
+    '((sequence "TODO(t)" "NEXT(n)" "|" "DONE(d!)")
+      (sequence "BACKLOG(b)" "PLAN(p)" "READY(r)" "ACTIVE(a)" "REVIEW(v)" "WAIT(w@/!)" "HOLD(h)" "|" "COMPLETED(c)" "CANC(k@)")))
+
+  (setq org-refile-targets
+    '(("Archive.org" :maxlevel . 1)
+      ("Tasks.org" :maxlevel . 1)))
+
+  ;; Save Org buffers after refiling!
+  (advice-add 'org-refile :after 'org-save-all-org-buffers)
+
+  (setq org-tag-alist
+    '((:startgroup)
+       ; Put mutually exclusive tags here
+       (:endgroup)
+       ("@errand" . ?E)
+       ("@home" . ?H)
+       ("@work" . ?W)
+       ("agenda" . ?a)
+       ("planning" . ?p)
+       ("publish" . ?P)
+       ("batch" . ?b)
+       ("note" . ?n)
+       ("idea" . ?i)))
+
+  ;; Configure custom agenda views
+  (setq org-agenda-custom-commands
+   '(("d" "Dashboard"
+     ((agenda "" ((org-deadline-warning-days 7)))
+      (todo "NEXT"
+        ((org-agenda-overriding-header "Next Tasks")))
+      (tags-todo "agenda/ACTIVE" ((org-agenda-overriding-header "Active Projects")))))
+
+    ("n" "Next Tasks"
+     ((todo "NEXT"
+        ((org-agenda-overriding-header "Next Tasks")))))
+
+    ("W" "Work Tasks" tags-todo "+work-email")
+
+    ;; Low-effort next actions
+    ("e" tags-todo "+TODO=\"NEXT\"+Effort<15&+Effort>0"
+     ((org-agenda-overriding-header "Low Effort Tasks")
+      (org-agenda-max-todos 20)
+      (org-agenda-files org-agenda-files)))
+
+    ("w" "Workflow Status"
+     ((todo "WAIT"
+            ((org-agenda-overriding-header "Waiting on External")
+             (org-agenda-files org-agenda-files)))
+      (todo "REVIEW"
+            ((org-agenda-overriding-header "In Review")
+             (org-agenda-files org-agenda-files)))
+      (todo "PLAN"
+            ((org-agenda-overriding-header "In Planning")
+             (org-agenda-todo-list-sublevels nil)
+             (org-agenda-files org-agenda-files)))
+      (todo "BACKLOG"
+            ((org-agenda-overriding-header "Project Backlog")
+             (org-agenda-todo-list-sublevels nil)
+             (org-agenda-files org-agenda-files)))
+      (todo "READY"
+            ((org-agenda-overriding-header "Ready for Work")
+             (org-agenda-files org-agenda-files)))
+      (todo "ACTIVE"
+            ((org-agenda-overriding-header "Active Projects")
+             (org-agenda-files org-agenda-files)))
+      (todo "COMPLETED"
+            ((org-agenda-overriding-header "Completed Projects")
+             (org-agenda-files org-agenda-files)))
+      (todo "CANC"
+            ((org-agenda-overriding-header "Cancelled Projects")
+             (org-agenda-files org-agenda-files)))))))
+
+  (setq org-capture-templates
+    `(("t" "Tasks / Projects")
+      ("tt" "Task" entry (file+olp "~/Projects/Code/emacs-from-scratch/OrgFiles/Tasks.org" "Inbox")
+           "* TODO %?\n  %U\n  %a\n  %i" :empty-lines 1)
+
+      ("j" "Journal Entries")
+      ("jj" "Journal" entry
+           (file+olp+datetree "~/Projects/Code/emacs-from-scratch/OrgFiles/Journal.org")
+           "\n* %<%I:%M %p> - Journal :journal:\n\n%?\n\n"
+           ;; ,(dw/read-file-as-string "~/Notes/Templates/Daily.org")
+           :clock-in :clock-resume
+           :empty-lines 1)
+      ("jm" "Meeting" entry
+           (file+olp+datetree "~/Projects/Code/emacs-from-scratch/OrgFiles/Journal.org")
+           "* %<%I:%M %p> - %a :meetings:\n\n%?\n\n"
+           :clock-in :clock-resume
+           :empty-lines 1)
+
+      ("w" "Workflows")
+      ("we" "Checking Email" entry (file+olp+datetree "~/Projects/Code/emacs-from-scratch/OrgFiles/Journal.org")
+           "* Checking Email :email:\n\n%?" :clock-in :clock-resume :empty-lines 1)
+
+      ("m" "Metrics Capture")
+      ("mw" "Weight" table-line (file+headline "~/Projects/Code/emacs-from-scratch/OrgFiles/Metrics.org" "Weight")
+       "| %U | %^{Weight} | %^{Notes} |" :kill-buffer t)))
+
+  (define-key global-map (kbd "C-c j")
+    (lambda () (interactive) (org-capture nil "jj")))
+
+  (efs/org-font-setup))
+
+(use-package org-bullets
+  :hook (org-mode . org-bullets-mode)
+  :custom
+  (org-bullets-bullet-list '("◉" "○" "●" "○" "●" "○" "●")))
+
+(defun efs/org-mode-visual-fill ()
+  (setq visual-fill-column-width 100
+        visual-fill-column-center-text t)
+  (visual-fill-column-mode 1))
+
+(use-package visual-fill-column
+  :hook (org-mode . efs/org-mode-visual-fill))
+
+(with-eval-after-load 'org
+  (org-babel-do-load-languages
+      'org-babel-load-languages
+      '((emacs-lisp . t)
+      (python . t)))
+
+  (push '("conf-unix" . conf-unix) org-src-lang-modes))
+
+(with-eval-after-load 'org
+  ;; This is needed as of Org 9.2
+  (require 'org-tempo)
+
+  (add-to-list 'org-structure-template-alist '("sh" . "src shell"))
+  (add-to-list 'org-structure-template-alist '("el" . "src emacs-lisp"))
+  (add-to-list 'org-structure-template-alist '("py" . "src python")))
+
+(use-package evil-org
+  :after org
+  :hook ((org-mode . evil-org-mode)
+         (org-agenda-mode . evil-org-mode)
+         (evil-org-mode . (lambda () (evil-org-set-key-theme '(navigation todo insert textobjects additional)))))
+  :config
+  (require 'evil-org-agenda)
+  (evil-org-agenda-set-keys))
+
+(zmax/leader-keys
+  "o"   '(:ignore t :which-key "org mode")
+
+  "oi"  '(:ignore t :which-key "insert")
+  "oil" '(org-insert-link :which-key "insert link")
+
+  "on"  '(org-toggle-narrow-to-subtree :which-key "toggle narrow")
+
+  "os"  '(dw/counsel-rg-org-files :which-key "search notes")
+
+  "oa"  '(org-agenda :which-key "status")
+  "ot"  '(org-todo-list :which-key "todos")
+  "oc"  '(org-capture t :which-key "capture")
+  "ox"  '(org-export-dispatch t :which-key "export"))
+
+;; Automatically tangle our Emacs.org config file when we save it
+(defun efs/org-babel-tangle-config ()
+  (when (string-equal (file-name-directory (buffer-file-name))
+                      (expand-file-name user-emacs-directory))
+    ;; Dynamic scoping to the rescue
+    (let ((org-confirm-babel-evaluate nil))
+      (org-babel-tangle))))
+
+(add-hook 'org-mode-hook (lambda () (add-hook 'after-save-hook #'efs/org-babel-tangle-config)))
+
+;; (defun efs/lsp-mode-setup ()
+;;   (setq lsp-headerline-breadcrumb-segments '(path-up-to-project file symbols))
+;;   (lsp-headerline-breadcrumb-mode))
+
+ (use-package lsp-mode
+  :commands (lsp lsp-deferred)
+  ;; :hook (lsp-mode . efs/lsp-mode-setup)
+  :hook ((typescript-mode rjsx-mode js2-mode web-mode) . lsp)
+  :bind (:map lsp-mode-map
+     ("TAB" . completion-at-point))
+  :init
+  (setq lsp-keymap-prefix "C-c l")  ;; Or 'C-l', 's-l'
+  :config
+  (lsp-enable-which-key-integration t))
+
+(zmax/leader-keys
+  "l"  '(:ignore t :which-key "lsp")
+  "ld" 'xref-find-definitions
+  "lr" 'xref-find-references
+  "ln" 'lsp-ui-find-next-reference
+  "lp" 'lsp-ui-find-prev-reference
+  "ls" 'counsel-imenu
+  "le" 'lsp-ui-flycheck-list
+  "lS" 'lsp-ui-sideline-mode
+  "lX" 'lsp-execute-code-action)
+
+(use-package lsp-ui
+  :hook (lsp-mode . lsp-ui-mode)
+  :custom
+  (lsp-ui-doc-position 'bottom))
+
+(use-package lsp-treemacs
+  :after lsp)
+
+(use-package lsp-ivy
+  :after lsp)
+
+(use-package dap-mode
+  ;; Uncomment the config below if you want all UI panes to be hidden by default!
+  ;; :custom
+  ;; (lsp-enable-dap-auto-configure nil)
+  ;; :config
+  ;; (dap-ui-mode 1)
+  :commands dap-debug
+  :config
+  ;; Set up Node debugging
+  (require 'dap-node)
+  (dap-node-setup) ;; Automatically installs Node debug adapter if needed
+
+  ;; Bind `C-c l d` to `dap-hydra` for easy access
+  (general-define-key
+    :keymaps 'lsp-mode-map
+    :prefix lsp-keymap-prefix
+    "d" '(dap-hydra t :wk "debugger")))
+
+(use-package typescript-mode
+  :mode "\\.ts\\'"
+  ;; :mode(("\\.ts\\'" . typescript-mode)
+  ;; ("\\.tsx\\'" . typescript-mode))) 
+  :hook (typescript-mode . lsp-deferred)
+  :config
+  (setq typescript-indent-level 2))
+
 (use-package js2-mode
     :ensure t
     :mode "\\.js\\'"
     :config
     (setq-default js2-ignored-warnings '("msg.extra.trailing.comma")
                   js-indent-level 2))
-;; https://github.com/magnars/js2-refactor.el
-;; js refactoring library
-;; (use-package js2-refactor
-;;     :ensure t
-;;     :config
-;;     (js2r-add-keybindings-with-prefix "C-c C-m")
-;;     (add-hook 'js2-mode-hook 'js2-refactor-mode))
-;; https://github.com/felipeochoa/rjsx-mode
-;; major mode for editing .jsx files
-; (use-package rjsx-mode
-;   :ensure t
-;   :init
-;   (add-to-list 'auto-mode-alist '("components\\/.*\\.js\\'" . rjsx-mode)))
+ 
 (use-package rjsx-mode
   :ensure t
   :mode(("\\.js\\'" . rjsx-mode)
+        ("\\.tsx\\'" . rjsx-mode)
         ("\\.jsx\\'" . rjsx-mode)))
-  ;; :init
-  ;; (add-hook 'rjsx-mode-hook 'prettier-js-mode))
-;; https://github.com/prettier/prettier-emacs
-;; minor mode that formats js on save
-;; (use-package prettier-js
-;;     :ensure t
-;;     :config
-;;     (setq prettier-js-args '(
-;;                           "--trailing-comma" "es5"
-;;                           "--single-quote" "true"
-;;                           "--print-width" "100"
-;;                           ))
-;;     (add-hook 'js2-mode-hook 'prettier-js-mode)
-;;     (add-hook 'rjsx-mode-hook 'prettier-js-mode))
-;; https://github.com/fxbois/web-mode
-;; major mode for editing html/css
-
-(use-package web-mode
-  :ensure t
-  :mode ("\\.html\\'")
+ 
+ (use-package web-mode
+  ;; :mode ("\\.html\\'")
+  :mode "(\\.\\(html?\\|ejs\\|tsx\\|jsx\\)\\'"
   :config
-  (setq web-mode-markup-indent-offset 2)
-  (setq web-mode-engines-alist
-        '(("django" . "focus/.*\\.html\\'")
-          ("ctemplate" . "realtimecrm/.*\\.html\\'"))))
+  (setq web-mode-markup-indent-offset 2))
+  ;; (setq web-mode-engines-alist
+        ;; '(("django" . "focus/.*\\.html\\'")
+          ;; ("ctemplate" . "realtimecrm/.*\\.html\\'"))))
 
-;; show argument list/type information in the modeline
-(use-package eldoc
+(use-package python-mode
   :ensure t
-  :diminish eldoc-mode)
+  :hook (python-mode . lsp-deferred)
+  :custom
+  ;; NOTE: Set these if Python 3 is called "python3" on your system!
+  ;; (python-shell-interpreter "python3")
+  ;; (dap-python-executable "python3")
+  (dap-python-debugger 'debugpy)
+  :config
+  (require 'dap-python))
 
-;; in-buffer completion
+(use-package pyvenv
+  :after python-mode
+  :config
+  (pyvenv-mode 1))
+
 (use-package company
-  :ensure t
-  :diminish company-mode
-  :init
-  (setq company-minimum-prefix-length 2
-        company-selection-wrap-around t
-        company-tooltip-align-annotations t)
-  :config
-  (add-hook 'after-init-hook 'global-company-mode))
+  :after lsp-mode
+  :hook (lsp-mode . company-mode)
+  :bind (:map company-active-map
+         ("<tab>" . company-complete-selection))
+        (:map lsp-mode-map
+         ("<tab>" . company-indent-or-complete-common))
+  :custom
+  (company-minimum-prefix-length 1)
+  (company-idle-delay 0.0))
 
 (use-package company-box
-  :ensure t
-  :after company
-  :diminish
   :hook (company-mode . company-box-mode))
 
-(use-package lsp-mode
-  :ensure t
-  :init (add-to-list 'company-backends 'company-capf)
-  :hook ((rjsx-mode . lsp-deferred)
-         (lsp-mode . lsp-enable-which-key-integration))
-  :commands (lsp lsp-deferred))
-
-(use-package lsp-ui
-  :ensure t
-  :commands lsp-ui-mode)
-;; if you are helm user
-(use-package helm-lsp
-  :ensure t
-  :commands helm-lsp-workspace-symbol)
-
-;; `company' backend for `lsp-mode'
-;; (use-package company-lsp
-;;   :ensure t
-;;   :after company lsp-mode
-;;   :init
-;;   (push 'company-lsp company-backends))
-
-;; (use-package company-lsp
-;;   :ensure t
-;;   :config
-;;   (add-to-list 'company-backends 'company-lsp))
-;; https://github.com/company-mode/company-mode
-;; in-buffer completion framework
-;; (use-package company
-;;   :ensure t
-;;   :diminish company-mode
-;;   :init
-;;   (setq company-dabbrev-ignore-case t
-;;         company-dabbrev-downcase nil)
-;;   (add-hook 'after-init-hook 'global-company-mode)
-;;   :config
-;;   (use-package company-tern
-;;     :ensure t
-;;     :init (add-to-list 'company-backends 'company-tern)))
-;; https://orgmode.org/
-;; org mode
-(use-package org
-  :mode (("\\.org$" . org-mode))
-  ;; :ensure org-plus-contrib
-  :config
-  (progn
-    ;; config stuff
-    ))
-;; https://github.com/Somelauw/evil-org-mode
-;; evil org mode
-(use-package evil-org
-  :ensure t
-  :after org
-  :config
-  (add-hook 'org-mode-hook 'evil-org-mode)
-  (add-hook 'evil-org-mode-hook
-            (lambda ()
-              (evil-org-set-key-theme)))
-  (require 'evil-org-agenda)
-  (evil-org-agenda-set-keys))
-;; https://github.com/louietan/anki-editor
-;; build anki cards with org mode
-;; (use-package anki-editor
-;;   :ensure t)
-;; https://github.com/syohex/emacs-git-gutter-fringe
-;; adds indicators of changed code
-(use-package git-gutter-fringe
-  :ensure t
-  :disabled t
-  :diminish git-gutter-mode
-  :init (setq git-gutter-fr:side 'right-fringe)
-  :config (global-git-gutter-mode t))
-;; https://github.com/smihica/emmet-mode
-;; abbreviations for html and css
-;; (use-package emmet-mode
-;;   :ensure t
-;;   :commands (emmet-mode
-;;              emmet-next-edit-point
-;;              emmet-prev-edit-point)
-;;   :init
-;;   (setq emmet-indentation 2)
-;;   (setq emmet-move-cursor-between-quotes t)
-;;   :config
-;;   ;; Auto-start on any markup modes
-;;   (add-hook 'sgml-mode-hook 'emmet-mode)
-;;   (add-hook 'web-mode-hook 'emmet-mode)
-;;   (add-hook 'rjsx-mode-hook 'emmet-mode))
-;; https://github.com/joaotavora/yasnippet
-;; add code templates from abbreviations
-;; (use-package yasnippet
-;;   :ensure t
-;;   :disabled t
-;;   :diminish yas-minor-mode
-;;   :config
-;;   (yas-global-mode 1))
-;; https://github.com/Fuco1/smartparens
-;; minor mode that auto inserts pairs of parens
-(use-package smartparens
-    :ensure t
-    :diminish smartparens-mode
-    :config
-    (add-hook 'prog-mode-hook 'smartparens-mode))
-;; https://github.com/Fanael/rainbow-delimiters
-;; different colors for highlighting delimiters
-(use-package rainbow-delimiters
-    :ensure t
-    :config
-    (add-hook 'prog-mode-hook 'rainbow-delimiters-mode))
-;; https://github.com/emacsmirror/rainbow-mode
-;; colorize color names in buffers
-(use-package rainbow-mode
-    :ensure t
-    :config
-    (setq rainbow-x-colors nil)
-    (add-hook 'prog-mode-hook 'rainbow-mode))
-;; https://github.com/Malabarba/aggressive-indent-mode
-;; minor mode that keeps code indented automatically
-(use-package aggressive-indent
-      :ensure t)
-
-;; https://github.com/emacs-evil/evil
-;; vim keybindings for editing
-(use-package evil
-  :ensure t
+(use-package projectile
+  :diminish projectile-mode
+  :config (projectile-mode)
+  :custom ((projectile-completion-system 'ivy))
+  :bind-keymap
+  ("C-c p" . projectile-command-map)
   :init
-  (setq evil-want-integration t) ;; This is optional since it's already set to t by default.
-  (setq evil-want-keybinding nil)
-  (setq evil-want-C-u-scroll t)
-  :config
-  (evil-mode 1))
-;; https://github.com/emacs-evil/evil-collection
-;; keybindings for evil-mode
-(use-package evil-collection
-  :after evil
-  :ensure t
+  ;; NOTE: Set this to the folder where you keep your Git repos!
+  (when (file-directory-p "~/Projects/Code")
+    (setq projectile-project-search-path '("~/Projects/Code")))
+  (setq projectile-switch-project-action #'projectile-dired))
+
+(use-package counsel-projectile
+  :after projectile
+  :config (counsel-projectile-mode))
+
+(zmax/leader-keys
+  "pp"  'projectile-switch-project
+  "sp"  'consult-ripgrep
+  "pc"  'projectile-compile-project
+  "pd"  'projectile-dired)
+
+(use-package magit
+  :commands (magit-status magit-get-current-branch)
   :custom
-  (evil-collection-setup-minibuffer t)
-  :config
-  (evil-collection-init))
-;; https://github.com/syl20bnr/evil-escape
-;; customizable key sequence to escape states
-(use-package evil-escape
-  :after evil
-  :ensure t
-  :config
-  (progn
-    (evil-escape-mode)
-    (setq-default evil-escape-key-sequence "fd")))
-;; https://github.com/linktohack/evil-commentary
-;; comment stuff out
-(use-package evil-commentary
-  :after evil
-  :ensure t
-  ; :defer t
-  :config
-  (evil-commentary-mode))
-;; https://github.com/emacs-evil/evil-surround
-;; surround stuff
-(use-package evil-surround
-  :after evil
-  :ensure t
-  :config
-  (global-evil-surround-mode 1))
-;; https://github.com/syl20bnr/evil-iedit-state
-;; evil state for iedit
+  (magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1))
+
+(zmax/leader-keys
+  "g"   '(:ignore t :which-key "git")
+  "gs"  'magit-status
+  "gd"  'magit-diff-unstaged
+  "gc"  'magit-branch-or-checkout
+  "gl"   '(:ignore t :which-key "log")
+  "glc" 'magit-log-current
+  "glf" 'magit-log-buffer-file
+  "gb"  'magit-branch
+  "gP"  'magit-push-current
+  "gp"  'magit-pull-branch
+  "gf"  'magit-fetch
+  "gF"  'magit-fetch-all
+  "gr"  'magit-rebase)
+
+;; NOTE: Make sure to configure a GitHub token before using this package!
+;; - https://magit.vc/manual/forge/Token-Creation.html#Token-Creation
+;; - https://magit.vc/manual/ghub/Getting-Started.html#Getting-Started
+;; (use-package forge
+;;   :after magit)
+
+(use-package evil-nerd-commenter
+  :bind ("M-/" . evilnc-comment-or-uncomment-lines))
+
+(use-package rainbow-delimiters
+  :hook (prog-mode . rainbow-delimiters-mode))
+
+(use-package iedit)
+
 (use-package evil-iedit-state
-  :after evil
-  :ensure t)
- 
+  :after evil)
 
-;; macro below used for auto-indent after paste
-(defun undo-collapse-begin (marker)
-  "Mark the beginning of a collapsible undo block.
-This must be followed with a call to undo-collapse-end with a marker
-eq to this one."
-  (push marker buffer-undo-list))
+(use-package smartparens
+  :hook (prog-mode . smartparens-mode))
 
-(defun undo-collapse-end (marker)
-  "Collapse undo history until a matching marker."
-  (cond
-    ((eq (car buffer-undo-list) marker)
-     (setq buffer-undo-list (cdr buffer-undo-list)))
-    (t
-     (let ((l buffer-undo-list))
-       (while (not (eq (cadr l) marker))
-         (cond
-           ((null (cdr l))
-            (error "undo-collapse-end with no matching marker"))
-           ((null (cadr l))
-            (setf (cdr l) (cddr l)))
-           (t (setq l (cdr l)))))
-       ;; remove the marker
-       (setf (cdr l) (cddr l))))))
+(use-package paren
+  :config
+  (set-face-attribute 'show-paren-match-expression nil :background "#363e4a")
+  (show-paren-mode 1))
 
+(use-package avy
+  :commands (avy-goto-char avy-goto-word-0 avy-goto-line))
 
-(defmacro with-undo-collapse (&rest body)
-  "Execute body, then collapse any resulting undo boundaries."
-  (declare (indent 0))
-  (let ((marker (list 'apply 'identity nil)) ; build a fresh list
-        (buffer-var (make-symbol "buffer")))
-    `(let ((,buffer-var (current-buffer)))
-       (unwind-protect
-           (progn
-             (undo-collapse-begin ',marker)
-             ,@body)
-         (with-current-buffer ,buffer-var
-           (undo-collapse-end ',marker))))))
+(zmax/leader-keys
+  "j"   '(:ignore t :which-key "jump")
+  "jj"  '(avy-goto-char :which-key "jump to char")
+  "jw"  '(avy-goto-word-0 :which-key "jump to word")
+  "jl"  '(avy-goto-line :which-key "jump to line"))
 
-;; functions below for auto-indent after paste
-(defun paste-and-indent-after ()
-  (interactive)
-  (with-undo-collapse
-    (evil-paste-after 1)
-    (evil-indent (evil-get-marker ?\[) (evil-get-marker ?\]))))
-(defun paste-and-indent-before ()
-  (interactive)
-  (with-undo-collapse
-    (evil-paste-before 1)
-    (evil-indent (evil-get-marker ?\[) (evil-get-marker ?\]))))
+(use-package ace-window
+  :bind (("M-o" . ace-window))
+  :custom
+  (aw-scope 'frame)
+  (aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l))
+  (aw-minibuffer-flag t)
+  :config
+  (ace-window-display-mode 1))
 
-;; https://github.com/noctuid/general.el
-;; convenient custom keybinging
-(use-package general
-  :ensure t
-  :init
-  (setq general-override-states '(insert
-                                  emacs
-                                  hybrid
-                                  normal
-                                  visual
-                                  motion
-                                  operator
-                                  replace))
-  :config (general-define-key
-    :states '(normal visual insert emacs)
-    :keymaps 'override
-    :prefix "SPC"
-    :non-normal-prefix "M-SPC"
-    "/"   '(helm-projectile-rg :which-key "ripgrep")
-    "TAB" '(evil-prev-buffer :which-key "previous buffer")
-    "SPC" '(helm-M-x :which-key "M-x")
-    ; ";;"  '(evil-commentary-line :which-key "comment line")
-    ;; Projects
-    "pf"  '(helm-projectile-find-file :which-key "find files")
-    "pp"  '(helm-projectile-switch-project :which-key "switch project")
-    "pb"  '(helm-projectile-switch-to-buffer :which-key "switch buffer")
-    "pr"  '(helm-show-kill-ring :which-key "show kill ring")
-    ;; Buffers
-    "bb"  '(helm-mini :which-key "buffers list")
-    "bd"  '(kill-buffer :which-key "buffer delete")
-    ;; Files
-    "fs" '(save-buffer :which-key "file save")
-    "ff" '(helm-find-files :which-key "file find")
-    ;; Window
-    "0" 'winum-select-window-0-or-10
-    "1" 'winum-select-window-1
-    "2" 'winum-select-window-2
-    "3" 'winum-select-window-3
-    "4" 'winum-select-window-4
-    "5" 'winum-select-window-5
-    "6" 'winum-select-window-6
-    "7" 'winum-select-window-7
-    "8" 'winum-select-window-8
-    "9" 'winum-select-window-9
-    "w/"  '(split-window-right :which-key "split right")
-    "w-"  '(split-window-below :which-key "split bottom")
-    "wv"  '(evil-window-vnew :which-key "new vertical window")
-    "wh"  '(evil-window-new :which-key "new horizontal window")
-    "wd"  '(delete-window :which-key "delete window")
-    "qz"  '(delete-frame :which-key "delete frame")
-    "qq"  '(kill-emacs :which-key "quit")
-    ;; Search
-    "sp"  '(helm-projectile-ag :which-key "search project")
-    "se"  '(evil-iedit-state/iedit-mode :which-key "evil iedit")
-    ;; Errors
-    "en"  '(flycheck-next-error :which-key "next error")
-    "ep"  '(flycheck-previous-error :which-key "previous error")
-    "el"  '(flycheck-list-errors :which-key "list errors")
-    "ev"  '(flycheck-verify-setup :which-key "flycheck verify setup")
-    ;; eshell
-    "sh"  '(eshell-here :which-key "open eshell")
-    "sr"  '(eshell-here-project-root :which-key "open eshell in project root")
-    "sd"  '(kill-buffer-and-window :which-key "kill eshell window and buffer")
-    ;; bookmarks
-    "rm" '(bookmark-set :whick-key "bookmark current file")
-    "rb" '(bookmark-jump :whick-key "jump to bookmark")
-    "rl" '(bookmark-bmenu-list :whick-key "list bookmarks")
-    ;; magit
-    "gs" '(magit-log-buffer-file :which-key "commit history for buffer")
-    ;; Others
-    "at"  '(ansi-term :which-key "open terminal")
-)(general-define-key
-    :states '(normal)
-    ;; :keymaps 'override
-    "p"  '(paste-and-indent-after :which-key "paste-after with indent")
-    "P"  '(paste-and-indent-before :which-key "paste-before with indent")
-))
+(use-package yasnippet
+  :hook (prog-mode . yas-minor-mode)
+  :config
+  (yas-reload-all))
 
-(use-package eshell
-  :ensure t
-  :init
-  (setq ;; eshell-buffer-shorthand t ...  Can't see Bug#19391
-        eshell-scroll-to-bottom-on-input 'all
-        eshell-error-if-no-glob t
+(use-package flycheck
+  :defer t
+  :hook (lsp-mode . flycheck-mode))
+
+(zmax/leader-keys
+  "e"  '(:ignore t :which-key "errors")
+  "en"  '(flycheck-next-error :which-key "next error")
+  "ep"  '(flycheck-previous-error :which-key "previous error")
+  "el"  '(flycheck-list-errors :which-key "list errors")
+  "ev"  '(flycheck-verify-setup :which-key "flycheck verify setup"))
+
+(setq-default tab-width 2)
+(setq-default evil-shift-width tab-width)
+(setq-default indent-tabs-mode nil)
+
+(use-package ws-butler
+  :hook ((text-mode . ws-butler-mode)
+         (prog-mode . ws-butler-mode)))
+
+;; (use-package term
+;;   :commands term
+;;   :config
+;;   (setq explicit-shell-file-name "bash") ;; Change this to zsh, etc
+;;   ;;(setq explicit-zsh-args '())         ;; Use 'explicit-<shell>-args for shell-specific args
+
+;;   ;; Match the default Bash shell prompt.  Update this if you have a custom prompt
+;;   (setq term-prompt-regexp "^[^#$%>\n]*[#$%>] *"))
+
+;; (use-package eterm-256color
+;;   :hook (term-mode . eterm-256color-mode))
+
+;; (use-package vterm
+;;   :commands vterm
+;;   :config
+;;   (setq term-prompt-regexp "^[^#$%>\n]*[#$%>] *")  ;; Set this to match your custom shell prompt
+;;   ;;(setq vterm-shell "zsh")                       ;; Set this to customize the shell to launch
+;;   (setq vterm-max-scrollback 10000))
+
+;; (when (eq system-type 'windows-nt)
+;;   (setq explicit-shell-file-name "powershell.exe")
+;;   (setq explicit-powershell.exe-args '()))
+
+(defun efs/configure-eshell ()
+  ;; Save command history when commands are entered
+  (add-hook 'eshell-pre-command-hook 'eshell-save-some-history)
+
+  ;; Truncate buffer for performance
+  (add-to-list 'eshell-output-filter-functions 'eshell-truncate-buffer)
+
+  ;; Bind some useful keys for evil-mode
+  (evil-define-key '(normal insert visual) eshell-mode-map (kbd "C-r") 'counsel-esh-history)
+  (evil-define-key '(normal insert visual) eshell-mode-map (kbd "<home>") 'eshell-bol)
+  (evil-normalize-keymaps)
+
+  (setq eshell-history-size         10000
+        eshell-buffer-maximum-lines 10000
         eshell-hist-ignoredups t
-        eshell-save-history-on-exit t
-        eshell-prefer-lisp-functions nil
-        eshell-destroy-buffer-when-process-dies t)
-  (add-hook 'eshell-mode-hook
-            (lambda ()
-              (add-to-list 'eshell-visual-commands "ssh")
-              (add-to-list 'eshell-visual-commands "tail")
-              (add-to-list 'eshell-visual-commands "top")))
-  (add-hook 'eshell-mode-hook
-            (lambda ()
-              (eshell/alias "e" "find-file $1")
-              (eshell/alias "ff" "find-file $1")
-              (eshell/alias "emacs" "find-file $1")
-              (eshell/alias "ee" "find-file-other-window $1")
-
-              (eshell/alias "gd" "magit-diff-unstaged")
-              (eshell/alias "gds" "magit-diff-staged")
-              (eshell/alias "d" "dired $1")
-
-              ;; The 'ls' executable requires the Gnu version on the Mac
-              (let ((ls (if (file-exists-p "/usr/local/bin/gls")
-                            "/usr/local/bin/gls"
-                          "/bin/ls")))
-                (eshell/alias "ll" (concat ls " -AlohG --color=always"))))))
-
-(defun eshell/gst (&rest args)
-    (magit-status (pop args) nil)
-    (eshell/echo))   ;; The echo command suppresses output
-
-(defun pwd-replace-home (pwd)
-  "Replace home in PWD with tilde (~) character."
-  (interactive)
-  (let* ((home (expand-file-name (getenv "HOME")))
-         (home-len (length home)))
-    (if (and
-         (>= (length pwd) home-len)
-         (equal home (substring pwd 0 home-len)))
-        (concat "~" (substring pwd home-len))
-      pwd)))
-
-(defun pwd-shorten-dirs (pwd)
-  "Shorten all directory names in PWD except the last two."
-  (let ((p-lst (split-string pwd "/")))
-    (if (> (length p-lst) 2)
-        (concat
-         (mapconcat (lambda (elm) (if (zerop (length elm)) ""
-                               (substring elm 0 1)))
-                    (butlast p-lst 2)
-                    "/")
-         "/"
-         (mapconcat (lambda (elm) elm)
-                    (last p-lst 2)
-                    "/"))
-      pwd)))  ;; Otherwise, we just return the PWD
-
-(defun split-directory-prompt (directory)
-  (if (string-match-p ".*/.*" directory)
-      (list (file-name-directory directory) (file-name-base directory))
-    (list "" directory)))
-
-(defun curr-dir-git-branch-string (pwd)
-  "Returns current git branch as a string, or the empty string if
-PWD is not in a git repo (or the git command is not found)."
-  (interactive)
-  (when (and (not (file-remote-p pwd))
-             (eshell-search-path "git")
-             (locate-dominating-file pwd ".git"))
-    (let* ((git-url (shell-command-to-string "git config --get remote.origin.url"))
-           (git-repo (file-name-base (s-trim git-url)))
-           (git-output (shell-command-to-string (concat "git rev-parse --abbrev-ref HEAD")))
-           (git-branch (s-trim git-output))
-           (git-icon  "\xe0a0")
-           (git-icon2 (propertize "\xf020" 'face `(:family "octicons"))))
-      (concat git-repo " " git-icon2 " " git-branch))))
-
-(defun python-prompt ()
-  "Returns a string (may be empty) based on the current Python
-   Virtual Environment. Assuming the M-x command: `pyenv-mode-set'
-   has been called."
-  (when (fboundp #'pyenv-mode-version)
-    (let ((venv (pyenv-mode-version)))
-      (when venv
-        (concat
-         (propertize "\xe928" 'face `(:family "alltheicons"))
-         (pyenv-mode-version))))))
-
-
-(defun eshell/eshell-local-prompt-function ()
-  "A prompt for eshell that works locally (in that is assumes
-that it could run certain commands) in order to make a prettier,
-more-helpful local prompt."
-  (interactive)
-  (let* ((pwd        (eshell/pwd))
-         (directory (split-directory-prompt
-                     (pwd-shorten-dirs
-                      (pwd-replace-home pwd))))
-         (parent (car directory))
-         (name   (cadr directory))
-         (branch (curr-dir-git-branch-string pwd))
-         ;; (ruby   (when (not (file-remote-p pwd)) (ruby-prompt)))
-         (python (when (not (file-remote-p pwd)) (python-prompt)))
-
-         (dark-env (eq 'dark (frame-parameter nil 'background-mode)))
-         (for-bars                 `(:weight bold))
-         (for-parent  (if dark-env `(:foreground "dark orange") `(:foreground "blue")))
-         (for-dir     (if dark-env `(:foreground "orange" :weight bold)
-                        `(:foreground "blue" :weight bold)))
-         (for-git                  `(:foreground "green"))
-         ;; (for-ruby                 `(:foreground "red"))
-         (for-python               `(:foreground "#5555FF")))
-
-    (concat
-     (propertize "⟣─ "    'face for-bars)
-     (propertize parent   'face for-parent)
-     (propertize name     'face for-dir)
-     (when branch
-       (concat (propertize " ── "    'face for-bars)
-               (propertize branch   'face for-git)))
-     ;; (when ruby
-     ;;   (concat (propertize " ── " 'face for-bars)
-     ;;           (propertize ruby   'face for-ruby)))
-     (when python
-       (concat (propertize " ── " 'face for-bars)
-               (propertize python 'face for-python)))
-     (propertize "\n"     'face for-bars)
-     (propertize (if (= (user-uid) 0) " #" " $") 'face `(:weight ultra-bold))
-     ;; (propertize " └→" 'face (if (= (user-uid) 0) `(:weight ultra-bold :foreground "red") `(:weight ultra-bold)))
-     (propertize " "    'face `(:weight bold)))))
-
-(setq-default eshell-prompt-function #'eshell/eshell-local-prompt-function)
-(setq eshell-highlight-prompt nil)
-
-(defun eshell-here ()
-  "Opens up a new shell in the directory associated with the
-    current buffer's file. The eshell is renamed to match that
-    directory to make multiple eshell windows easier."
-  (interactive)
-  (let* ((height (/ (window-total-height) 3)))
-    (split-window-vertically (- height))
-    (other-window 1)
-    (eshell "new")
-    (insert (concat "ls"))
-    (eshell-send-input)))
-
-(defun eshell-here-project-root ()
-  "Opens up a new shell in the directory associated with the
-    current buffer's file. The eshell is renamed to match that
-    directory to make multiple eshell windows easier."
-  (interactive)
-  (let* ((height (/ (window-total-height) 3)))
-    (split-window-vertically (- height))
-    (other-window 1)
-    (projectile-run-eshell)
-    (insert (concat "ls"))
-    (eshell-send-input)))
-
-;; (defun delete-single-window (&optional window)
-;;   "Remove WINDOW from the display.  Default is `selected-window'.
-;; If WINDOW is the only one in its frame, then `delete-frame' too."
-;;   (interactive)
-;;   (save-current-buffer
-;;     (setq window (or window (selected-window)))
-;;     (select-window window)
-;;     (kill-buffer)
-;;     (if (one-window-p t)
-;;         (delete-frame)
-;;       (delete-window (selected-window)))))
-
-;; (defun eshell/x (&rest args)
-;;   (delete-single-window))
+        eshell-scroll-to-bottom-on-input t))
 
 (use-package eshell-git-prompt
-  :ensure t
-  ;; :after eshell
-  :init (eshell-git-prompt-use-theme 'robbyrussell))
+  :after eshell)
 
-;;;;;;;;;;;;;;
-;; defaults ;;
-;;;;;;;;;;;;;;
-;; interactive shell so we load .bashrc
-;; (setq shell-command-switch "-ic")
-;; switch meta to mac command
-;; (setq mac-command-modifier 'control)
-(setq mac-option-key-is-meta nil
-      mac-command-key-is-meta t
-      mac-command-modifier 'meta
-      mac-option-modifier 'control)
-;; for lsp performance
-(setq gc-cons-threshold 100000000)
-(setq read-process-output-max (* 1024 1024))
-;; smoother scrolling
-(setq redisplay-dont-pause t
-  scroll-margin 1
-  scroll-step 1
-  scroll-conservatively 10000
-  scroll-preserve-screen-position 1)
-;; set highlight color
-;; https://stackoverflow.com/questions/18684579/how-do-i-change-the-highlight-color-for-selected-text-with-emacs-deftheme
-;; should use customize-face
-(set-face-attribute 'region nil :background "#666" :foreground "#ffffff")
-;; set font size
-(set-face-attribute 'default nil :height 150)
-;; open new files in same frame when opening gui from terminal
-(setq ns-pop-up-frames nil)
-;; stop startup msg
-(setq inhibit-startup-message t)
-;; set flycheck executable
-(setq flycheck-python-flake8-executable "flake8")
-;; list all buffers in ibuffer
-(defalias 'list-buffers 'ibuffer)
-;; (defalias 'list-buffers 'ibuffer-other-window)
-;; disable toolbar
-(when (fboundp 'tool-bar-mode)
-  (tool-bar-mode 0))
-;; disable scrollbar
-(scroll-bar-mode -1)
-;; disable emacs bell
-(setq ring-bell-function 'ignore)
-;; enable linum mode
-(if (fboundp 'global-display-line-numbers-mode)
-    (global-display-line-numbers-mode t)
-    (global-linum-mode))
-;; enable narrowing
-(put 'narrow-to-region 'disabled nil)
-;; enable paren matching mode
-(show-paren-mode t)
-;; enable electric pair mode
-(electric-pair-mode t)
-;; enable electric indent mode
-(electric-indent-mode t)
-;; set frame width
-(set-frame-height
- (selected-frame)
- (/ (display-pixel-height) (frame-char-height)))
-(set-frame-width
- (selected-frame)
- (/ (/ (display-pixel-width) 3) (frame-char-width)))
-;; (add-to-list 'initial-frame-alist '(fullscreen . fullheight)(width . (/ display-pixel-width 2)))
-;; (add-to-list 'default-frame-alist '(fullscreen . fullheight))
-;; (setq frame-resize-pixelwise t)
-;; (let ((frame (selected-frame))
-;;       ;; (one-half-display-pixel-width))
-;;   (one-half-display-pixel-width (/ (display-pixel-width) 2)))
-;;   (set-frame-width frame one-half-display-pixel-width nil 'pixelwise)
-;;   (set-frame-height frame display-pixel-height nil 'pixelwise)
-;;   (set-frame-position frame 0 0))
-;; use spaces instead of tabs
-(setq-default indent-tabs-mode nil)
-(setq-default tab-width 2)
-(setq css-indent-offset 2)
-;; ;; indent 2 spaces in python-mode
-;; (add-hook 'python-mode-hook '(lambda ()
-;;                                (setq python-indent 2)))
-;; set default directory
-(setq default-directory "~/")
-;; run check-parens after saving any file
-(add-hook 'after-save-hook 'check-parens nil t)
-;; propogate git changes to open files
-(global-auto-revert-mode t)
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(evil-collection-setup-minibuffer t)
- '(helm-minibuffer-history-key "M-p")
- '(org-export-backends '(ascii html icalendar latex md odt))
- '(package-selected-packages
-   '(anki-editor helm-lsp lsp-ui lsp-mode magit evil-org general flycheck evil-escape zenburn-theme evil-collection evil dashboard which-key try use-package)))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(markdown-code-face ((t (:inherit consolas)))))
-;;; init.el ends here
+(use-package eshell
+  :hook (eshell-first-time-mode . efs/configure-eshell)
+  :config
+
+  (with-eval-after-load 'esh-opt
+    (setq eshell-destroy-buffer-when-process-dies t)
+    (setq eshell-visual-commands '("htop" "zsh" "vim")))
+
+  (eshell-git-prompt-use-theme 'powerline))
+
+(use-package dired
+  :ensure nil
+  :commands (dired dired-jump)
+  :bind (("C-x C-j" . dired-jump))
+  :custom ((dired-listing-switches "-agho --group-directories-first"))
+  :config
+  (evil-collection-define-key 'normal 'dired-mode-map
+    "h" 'dired-single-up-directory
+    "l" 'dired-single-buffer))
+
+(use-package dired-single
+  :commands (dired dired-jump))
+
+(use-package all-the-icons-dired
+  :hook (dired-mode . all-the-icons-dired-mode))
+
+(use-package dired-open
+  :commands (dired dired-jump)
+  :config
+  ;; Doesn't work as expected!
+  ;;(add-to-list 'dired-open-functions #'dired-open-xdg t)
+  (setq dired-open-extensions '(("png" . "feh")
+                                ("mkv" . "mpv"))))
+
+(use-package dired-hide-dotfiles
+  :hook (dired-mode . dired-hide-dotfiles-mode)
+  :config
+  (evil-collection-define-key 'normal 'dired-mode-map
+    "H" 'dired-hide-dotfiles-mode))
+
+;; Make gc pauses faster by decreasing the threshold.
+(setq gc-cons-threshold (* 2 1000 1000))
