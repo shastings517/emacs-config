@@ -1,5 +1,7 @@
 .DS_Store
+.last-package-update-day
 etc/
 var/
 elpa/
 packages/
+transient/

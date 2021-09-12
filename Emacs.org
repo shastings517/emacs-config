@@ -15,8 +15,8 @@ The following variables are used to tweak some of the configuration pieces for u
   ;;       in Emacs and init.el will be generated automatically!
 
   ;; You will most likely need to adjust this font size for your system!
-  (defvar efs/default-font-size 180)
-  (defvar efs/default-variable-font-size 180)
+  (defvar efs/default-font-size 120)
+  (defvar efs/default-variable-font-size 120)
 
   ;; Make frame transparency overridable
   (defvar efs/frame-transparency '(99 . 99))
@@ -412,6 +412,19 @@ This is an example of using [[https://github.com/abo-abo/hydra][Hydra]] to desig
 
   (zmax/leader-keys
     "ts" '(hydra-text-scale/body :which-key "scale text"))
+
+#+end_src
+
+** Dashboard
+
+#+begin_src emacs-lisp
+
+;; https://github.com/emacs-dashboard/emacs-dashboard
+;; custom dashboard
+(use-package dashboard
+  :ensure t
+  :config
+  (dashboard-setup-startup-hook))
 
 #+end_src
 
@@ -853,6 +866,16 @@ Emacs' built in commenting functionality =comment-dwim= (usually bound to =M-;=)
 
 #+end_src
 
+** Expand region
+
+#+begin_src emacs-lisp
+
+(use-package expand-region
+  :bind (("M-[" . er/expand-region)
+         ("C-(" . er/mark-outside-pairs)))
+
+#+end_src
+
 * Org Mode
 
 [[https://orgmode.org/][Org Mode]] is one of the hallmark features of Emacs.  It is a rich
@@ -920,9 +943,9 @@ This section contains the basic configuration for =org-mode= plus the configurat
     (setq org-log-into-drawer t)
 
     (setq org-agenda-files
-          '("~/Projects/Code/emacs-from-scratch/OrgFiles/Tasks.org"
-            "~/Projects/Code/emacs-from-scratch/OrgFiles/Habits.org"
-            "~/Projects/Code/emacs-from-scratch/OrgFiles/Birthdays.org"))
+          '("~/Dropbox/org/tasks.org"
+            "~/Dropbox/org/habits.org"
+            "~/Dropbox/org/fitness.org"))
 
     (require 'org-habit)
     (add-to-list 'org-modules 'org-habit)

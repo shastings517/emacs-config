@@ -2,8 +2,8 @@
 ;;       in Emacs and init.el will be generated automatically!
 
 ;; You will most likely need to adjust this font size for your system!
-(defvar efs/default-font-size 180)
-(defvar efs/default-variable-font-size 180)
+(defvar efs/default-font-size 120)
+(defvar efs/default-variable-font-size 120)
 
 ;; Make frame transparency overridable
 (defvar efs/frame-transparency '(99 . 99))
@@ -268,6 +268,13 @@
 (zmax/leader-keys
   "ts" '(hydra-text-scale/body :which-key "scale text"))
 
+;; https://github.com/emacs-dashboard/emacs-dashboard
+;; custom dashboard
+(use-package dashboard
+  :ensure t
+  :config
+  (dashboard-setup-startup-hook))
+
 ;; (defun efs/lsp-mode-setup ()
 ;;   (setq lsp-headerline-breadcrumb-segments '(path-up-to-project file symbols))
 ;;   (lsp-headerline-breadcrumb-mode))
@@ -494,6 +501,10 @@
 
 (use-package undo-fu)
 
+(use-package expand-region
+  :bind (("M-[" . er/expand-region)
+         ("C-(" . er/mark-outside-pairs)))
+
 (defun efs/org-font-setup ()
   ;; Replace list hyphen with dot
   (font-lock-add-keywords 'org-mode
@@ -541,9 +552,9 @@
   (setq org-log-into-drawer t)
 
   (setq org-agenda-files
-        '("~/Projects/Code/emacs-from-scratch/OrgFiles/Tasks.org"
-          "~/Projects/Code/emacs-from-scratch/OrgFiles/Habits.org"
-          "~/Projects/Code/emacs-from-scratch/OrgFiles/Birthdays.org"))
+        '("~/Dropbox/org/tasks.org"
+          "~/Dropbox/org/habits.org"
+          "~/Dropbox/org/fitness.org"))
 
   (require 'org-habit)
   (add-to-list 'org-modules 'org-habit)
@@ -809,16 +820,3 @@
 
 ;; Make gc pauses faster by decreasing the threshold.
 (setq gc-cons-threshold (* 2 1000 1000))
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(package-selected-packages
-   '(eshell-toggle yasnippet ws-butler which-key web-mode visual-fill-column use-package undo-fu typescript-mode smartparens rjsx-mode rainbow-delimiters pyvenv python-mode org-bullets no-littering magit lsp-ui lsp-ivy ivy-rich ivy-prescient helpful general flycheck exec-path-from-shell evil-org evil-nerd-commenter evil-iedit-state evil-escape evil-collection eshell-git-prompt doom-themes doom-modeline dired-single dired-open dired-hide-dotfiles dap-mode counsel-projectile company-box command-log-mode auto-package-update all-the-icons-dired add-node-modules-path)))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )
