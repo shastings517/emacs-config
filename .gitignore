@@ -1,7 +1,6 @@
-.DS_Store
-.last-package-update-day
-etc/
-var/
-elpa/
-packages/
-transient/
+*
+
+!.gitignore
+!Emacs.org
+!init.el
+!/OrgFiles

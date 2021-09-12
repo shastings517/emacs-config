@@ -203,6 +203,8 @@ This configuration uses [[https://evil.readthedocs.io/en/latest/index.html][evil
 
     (zmax/leader-keys
       "SPC" '(counsel-M-x :which-key "M-x")
+      "b"   '(:ignore t :which-key "buffers")
+      "bd"  '(kill-buffer :which-key "kill buffer")
       "e"   '(:ignore t :which-key "eval")
       "eb"  '(eval-buffer :which-key "eval buffer")
       "t"  '(:ignore t :which-key "toggles")
@@ -211,6 +213,10 @@ This configuration uses [[https://evil.readthedocs.io/en/latest/index.html][evil
       "fs" '(save-buffer :which-key "file save")
       "ff" '(counsel-find-file :which-key "find files")
       "fde" '(lambda () (interactive) (find-file (expand-file-name "~/.emacs.d/Emacs.org")))
+      "m"   '(:ignore t :which-key "bookmark")
+      "mc" '(bookmark-set :whick-key "bookmark current file")
+      "mj" '(bookmark-jump :whick-key "jump to bookmark")
+      "ml" '(bookmark-bmenu-list :whick-key "list bookmarks")
       "s"  '(:ignore t :which-key "search")
       "sp"  '(counsel-projectile-ag :which-key "search project")
       "se"  '(evil-iedit-state/iedit-mode :which-key "evil iedit")
@@ -323,37 +329,35 @@ This configuration uses [[https://evil.readthedocs.io/en/latest/index.html][evil
 
 #+begin_src emacs-lisp
 
-  (use-package ivy
-    :diminish
-    :bind (("C-s" . swiper)
-           :map ivy-minibuffer-map
-           ("TAB" . ivy-alt-done)
-           ("C-l" . ivy-alt-done)
-           ("C-j" . ivy-next-line)
-           ("C-k" . ivy-previous-line)
-           :map ivy-switch-buffer-map
-           ("C-k" . ivy-previous-line)
-           ("C-l" . ivy-done)
-           ("C-d" . ivy-switch-buffer-kill)
-           :map ivy-reverse-i-search-map
-           ("C-k" . ivy-previous-line)
-           ("C-d" . ivy-reverse-i-search-kill))
-    :config
-    (ivy-mode 1))
+(use-package ivy
+  :diminish
+  :bind (("C-s" . swiper)
+          :map ivy-minibuffer-map
+          ("TAB" . ivy-alt-done)
+          ("C-l" . ivy-alt-done)
+          ("C-j" . ivy-next-line)
+          ("C-k" . ivy-previous-line)
+          :map ivy-switch-buffer-map
+          ("C-k" . ivy-previous-line)
+          ("C-l" . ivy-done)
+          ("C-d" . ivy-switch-buffer-kill)
+          :map ivy-reverse-i-search-map
+          ("C-k" . ivy-previous-line)
+          ("C-d" . ivy-reverse-i-search-kill))
+  :config
+  (ivy-mode 1))
 
-  (use-package ivy-rich
-    :after ivy
-    :init
-    (ivy-rich-mode 1))
+(use-package ivy-rich
+  :after ivy
+  :init
+  (ivy-rich-mode 1))
 
-  (use-package counsel
-    :bind (("C-M-j" . 'counsel-switch-buffer)
-           :map minibuffer-local-map
-           ("C-r" . 'counsel-minibuffer-history))
-    :custom
-    (counsel-linux-app-format-function #'counsel-linux-app-format-function-name-only)
-    :config
-    (counsel-mode 1))
+(use-package counsel
+  :bind ("C-M-j" . 'counsel-switch-buffer)
+  :custom
+  (counsel-linux-app-format-function #'counsel-linux-app-format-function-name-only)
+  :config
+  (counsel-mode 1))
 
 #+end_src
 
@@ -619,8 +623,8 @@ There are a number of other language servers for Python so if you find that =pyl
     :hook (python-mode . lsp-deferred)
     :custom
     ;; NOTE: Set these if Python 3 is called "python3" on your system!
-    ;; (python-shell-interpreter "python3")
-    ;; (dap-python-executable "python3")
+    (python-shell-interpreter "python3")
+    (dap-python-executable "python3")
     (dap-python-debugger 'debugpy)
     :config
     (require 'dap-python))
@@ -687,7 +691,6 @@ We also use [[https://github.com/sebastiencs/company-box][company-box]] to furth
 
   (zmax/leader-keys
     "pp"  'projectile-switch-project
-    "sp"  'consult-ripgrep
     "pc"  'projectile-compile-project
     "pd"  'projectile-dired)
 
@@ -873,6 +876,19 @@ Emacs' built in commenting functionality =comment-dwim= (usually bound to =M-;=)
 (use-package expand-region
   :bind (("M-[" . er/expand-region)
          ("C-(" . er/mark-outside-pairs)))
+
+#+end_src
+
+** Buffer Management
+
+#+begin_src emacs-lisp
+  ;; (use-package bufler
+  ;;   :bind (("C-M-j" . bufler-switch-buffer))
+  ;;   :config
+  ;;   (evil-collection-define-key 'normal 'bufler-list-mode-map
+  ;;     (kbd "RET")   'bufler-list-buffer-switch
+  ;;     (kbd "M-RET") 'bufler-list-buffer-peek
+  ;;     "D"           'bufler-list-buffer-kill))
 
 #+end_src
 
@@ -1270,43 +1286,43 @@ For more thoughts on Eshell, check out these articles by Pierre Neidhardt:
 
 #+begin_src emacs-lisp
 
-  (defun efs/configure-eshell ()
-    ;; Save command history when commands are entered
-    (add-hook 'eshell-pre-command-hook 'eshell-save-some-history)
+(defun efs/configure-eshell ()
+  ;; Save command history when commands are entered
+  (add-hook 'eshell-pre-command-hook 'eshell-save-some-history)
 
-    ;; Truncate buffer for performance
-    (add-to-list 'eshell-output-filter-functions 'eshell-truncate-buffer)
+  ;; Truncate buffer for performance
+  (add-to-list 'eshell-output-filter-functions 'eshell-truncate-buffer)
 
-    ;; Bind some useful keys for evil-mode
-    (evil-define-key '(normal insert visual) eshell-mode-map (kbd "C-r") 'counsel-esh-history)
-    (evil-define-key '(normal insert visual) eshell-mode-map (kbd "<home>") 'eshell-bol)
-    (evil-normalize-keymaps)
+  ;; Bind some useful keys for evil-mode
+  (evil-define-key '(normal insert visual) eshell-mode-map (kbd "C-r") 'counsel-esh-history)
+  (evil-define-key '(normal insert visual) eshell-mode-map (kbd "<home>") 'eshell-bol)
+  (evil-normalize-keymaps)
 
-    (setq eshell-history-size         10000
-          eshell-buffer-maximum-lines 10000
-          eshell-hist-ignoredups t
-          eshell-scroll-to-bottom-on-input t))
+  (setq eshell-history-size         10000
+        eshell-buffer-maximum-lines 10000
+        eshell-hist-ignoredups t
+        eshell-scroll-to-bottom-on-input t))
 
-  (use-package eshell-git-prompt
-    :after eshell)
+(use-package eshell-git-prompt
+  :after eshell)
 
-  (use-package eshell
-    :hook (eshell-first-time-mode . efs/configure-eshell)
-    :config
+(use-package eshell
+  :hook (eshell-first-time-mode . efs/configure-eshell)
+  :config
 
-    (with-eval-after-load 'esh-opt
-      (setq eshell-destroy-buffer-when-process-dies t)
-      (setq eshell-visual-commands '("htop" "zsh" "vim")))
+  (with-eval-after-load 'esh-opt
+    (setq eshell-destroy-buffer-when-process-dies t)
+    (setq eshell-visual-commands '("htop" "zsh" "vim")))
 
     (eshell-git-prompt-use-theme 'powerline))
 
-  (use-package eshell-toggle
-    :after eshell
-    :bind ("C-M-'" . eshell-toggle)
-    :custom
-    (eshell-toggle-size-fraction 3)
-    (eshell-toggle-use-projectile-root t)
-    (eshell-toggle-run-command nil))
+(use-package eshell-toggle
+  :after eshell
+  :bind ("C-M-'" . eshell-toggle)
+  :custom
+  (eshell-toggle-size-fraction 3)
+  (eshell-toggle-use-projectile-root t)
+  (eshell-toggle-run-command nil))
 
 #+end_src
 

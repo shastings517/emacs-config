@@ -130,6 +130,8 @@
 
   (zmax/leader-keys
     "SPC" '(counsel-M-x :which-key "M-x")
+    "b"   '(:ignore t :which-key "buffers")
+    "bd"  '(kill-buffer :which-key "kill buffer")
     "e"   '(:ignore t :which-key "eval")
     "eb"  '(eval-buffer :which-key "eval buffer")
     "t"  '(:ignore t :which-key "toggles")
@@ -138,6 +140,10 @@
     "fs" '(save-buffer :which-key "file save")
     "ff" '(counsel-find-file :which-key "find files")
     "fde" '(lambda () (interactive) (find-file (expand-file-name "~/.emacs.d/Emacs.org")))
+    "m"   '(:ignore t :which-key "bookmark")
+    "mc" '(bookmark-set :whick-key "bookmark current file")
+    "mj" '(bookmark-jump :whick-key "jump to bookmark")
+    "ml" '(bookmark-bmenu-list :whick-key "list bookmarks")
     "s"  '(:ignore t :which-key "search")
     "sp"  '(counsel-projectile-ag :which-key "search project")
     "se"  '(evil-iedit-state/iedit-mode :which-key "evil iedit")
@@ -207,18 +213,18 @@
 (use-package ivy
   :diminish
   :bind (("C-s" . swiper)
-         :map ivy-minibuffer-map
-         ("TAB" . ivy-alt-done)
-         ("C-l" . ivy-alt-done)
-         ("C-j" . ivy-next-line)
-         ("C-k" . ivy-previous-line)
-         :map ivy-switch-buffer-map
-         ("C-k" . ivy-previous-line)
-         ("C-l" . ivy-done)
-         ("C-d" . ivy-switch-buffer-kill)
-         :map ivy-reverse-i-search-map
-         ("C-k" . ivy-previous-line)
-         ("C-d" . ivy-reverse-i-search-kill))
+          :map ivy-minibuffer-map
+          ("TAB" . ivy-alt-done)
+          ("C-l" . ivy-alt-done)
+          ("C-j" . ivy-next-line)
+          ("C-k" . ivy-previous-line)
+          :map ivy-switch-buffer-map
+          ("C-k" . ivy-previous-line)
+          ("C-l" . ivy-done)
+          ("C-d" . ivy-switch-buffer-kill)
+          :map ivy-reverse-i-search-map
+          ("C-k" . ivy-previous-line)
+          ("C-d" . ivy-reverse-i-search-kill))
   :config
   (ivy-mode 1))
 
@@ -228,9 +234,7 @@
   (ivy-rich-mode 1))
 
 (use-package counsel
-  :bind (("C-M-j" . 'counsel-switch-buffer)
-         :map minibuffer-local-map
-         ("C-r" . 'counsel-minibuffer-history))
+  :bind ("C-M-j" . 'counsel-switch-buffer)
   :custom
   (counsel-linux-app-format-function #'counsel-linux-app-format-function-name-only)
   :config
@@ -365,8 +369,8 @@
   :hook (python-mode . lsp-deferred)
   :custom
   ;; NOTE: Set these if Python 3 is called "python3" on your system!
-  ;; (python-shell-interpreter "python3")
-  ;; (dap-python-executable "python3")
+  (python-shell-interpreter "python3")
+  (dap-python-executable "python3")
   (dap-python-debugger 'debugpy)
   :config
   (require 'dap-python))
@@ -408,7 +412,6 @@
 
 (zmax/leader-keys
   "pp"  'projectile-switch-project
-  "sp"  'consult-ripgrep
   "pc"  'projectile-compile-project
   "pd"  'projectile-dired)
 
@@ -504,6 +507,14 @@
 (use-package expand-region
   :bind (("M-[" . er/expand-region)
          ("C-(" . er/mark-outside-pairs)))
+
+;; (use-package bufler
+;;   :bind (("C-M-j" . bufler-switch-buffer))
+;;   :config
+;;   (evil-collection-define-key 'normal 'bufler-list-mode-map
+;;     (kbd "RET")   'bufler-list-buffer-switch
+;;     (kbd "M-RET") 'bufler-list-buffer-peek
+;;     "D"           'bufler-list-buffer-kill))
 
 (defun efs/org-font-setup ()
   ;; Replace list hyphen with dot
@@ -778,7 +789,7 @@
     (setq eshell-destroy-buffer-when-process-dies t)
     (setq eshell-visual-commands '("htop" "zsh" "vim")))
 
-  (eshell-git-prompt-use-theme 'powerline))
+    (eshell-git-prompt-use-theme 'powerline))
 
 (use-package eshell-toggle
   :after eshell
