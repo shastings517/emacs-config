@@ -9,8 +9,8 @@
          '("melpa" . "https://melpa.org/packages/"))
 (add-to-list 'package-archives
         '("gnu" . "http://elpa.gnu.org/packages/"))
-(add-to-list 'package-archives
-        '("marmalade" . "http://marmalade-repo.org/packages/"))
+;; (add-to-list 'package-archives
+;;        '("marmalade" . "http://marmalade-repo.org/packages/"))
 ;; (add-to-list 'package-archives
 ;;         '("melpa" . "http://melpa.milkbox.net/packages/"))
 (add-to-list 'package-archives
@@ -163,7 +163,7 @@
     helm-recentf-fuzzy-match t
     helm-locate-fuzzy-match t
     helm-semantic-fuzzy-match t
-    helm-imenu-fuzzy-match t
+    ;; helm-imenu-fuzzy-match t
     helm-completion-in-region-fuzzy-match t
     helm-candidate-number-list 80
     ; helm-mode-line-string nil
@@ -197,12 +197,17 @@
 ;; silver searcher helm interface
 (use-package helm-ag
   :ensure t)
+
+(use-package go-mode
+  :ensure t)
 ;; https://github.com/mooz/js2-mode
 ;; major mode for editing .js files
 (use-package js2-mode
     :ensure t
     :mode "\\.js\\'"
-    :config
+    :init
+    ;; (add-hook 'js2-mode-hook #'flow-js2-mode)
+    (setq js2-strict-missing-semi-warning nil)
     (setq-default js2-ignored-warnings '("msg.extra.trailing.comma")
                   js-indent-level 2))
 ;; https://github.com/magnars/js2-refactor.el
@@ -221,13 +226,24 @@
 (use-package rjsx-mode
   :ensure t
   :mode(("\\.js\\'" . rjsx-mode)
-        ("\\.jsx\\'" . rjsx-mode)))
-  ;; :init
-  ;; (add-hook 'rjsx-mode-hook 'prettier-js-mode))
+        ("\\.jsx\\'" . rjsx-mode)
+        ("\\.tsx\\'" . rjsx-mode)
+        ("\\.ts\\'" . rjsx-mode))
+  :init
+  (add-hook 'rjsx-mode-hook 'prettier-js-mode))
+
+(use-package xref-js2
+  :ensure t
+  :config
+  (:hook js2-mode
+         (:hook xref-backend-functions :local xref-js2-xref-backend)))
+;; (use-package flow-js2-mode
+;;   :ensure t)
+
 ;; https://github.com/prettier/prettier-emacs
 ;; minor mode that formats js on save
-;; (use-package prettier-js
-;;     :ensure t
+(use-package prettier-js
+  :ensure t)
 ;;     :config
 ;;     (setq prettier-js-args '(
 ;;                           "--trailing-comma" "es5"
@@ -270,20 +286,22 @@
   :diminish
   :hook (company-mode . company-box-mode))
 
-(use-package lsp-mode
-  :ensure t
-  :init (add-to-list 'company-backends 'company-capf)
-  :hook ((rjsx-mode . lsp-deferred)
-         (lsp-mode . lsp-enable-which-key-integration))
-  :commands (lsp lsp-deferred))
+;; (use-package lsp-mode
+;;   :ensure t
+;;   :init (add-to-list 'company-backends 'company-capf)
+;;   :hook ((rjsx-mode . lsp-deferred)
+;;          (lsp-mode . lsp-enable-which-key-integration))
+;;   :commands (lsp lsp-deferred)
+;;   :config
+;;   (setq lsp-log-io t))
 
-(use-package lsp-ui
-  :ensure t
-  :commands lsp-ui-mode)
-;; if you are helm user
-(use-package helm-lsp
-  :ensure t
-  :commands helm-lsp-workspace-symbol)
+;; (use-package lsp-ui
+;;   :ensure t
+;;   :commands lsp-ui-mode)
+;; ;; if you are helm user
+;; (use-package helm-lsp
+;;   :ensure t
+;;   :commands helm-lsp-workspace-symbol)
 
 ;; `company' backend for `lsp-mode'
 ;; (use-package company-lsp
@@ -811,7 +829,7 @@ more-helpful local prompt."
  (/ (display-pixel-height) (frame-char-height)))
 (set-frame-width
  (selected-frame)
- (/ (/ (display-pixel-width) 3) (frame-char-width)))
+ (/ (/ (display-pixel-width) 2) (frame-char-width)))
 ;; (add-to-list 'initial-frame-alist '(fullscreen . fullheight)(width . (/ display-pixel-width 2)))
 ;; (add-to-list 'default-frame-alist '(fullscreen . fullheight))
 ;; (setq frame-resize-pixelwise t)
@@ -841,9 +859,10 @@ more-helpful local prompt."
  ;; If there is more than one, they won't work right.
  '(evil-collection-setup-minibuffer t)
  '(helm-minibuffer-history-key "M-p")
+ '(lsp-clients-flow-server "flow")
  '(org-export-backends '(ascii html icalendar latex md odt))
  '(package-selected-packages
-   '(anki-editor helm-lsp lsp-ui lsp-mode magit evil-org general flycheck evil-escape zenburn-theme evil-collection evil dashboard which-key try use-package)))
+   '(gnu-elpa-keyring-update spinner anki-editor helm-lsp lsp-ui lsp-mode magit evil-org general flycheck evil-escape zenburn-theme evil-collection evil dashboard which-key try use-package)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
