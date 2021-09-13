@@ -691,6 +691,7 @@ We also use [[https://github.com/sebastiencs/company-box][company-box]] to furth
 
   (zmax/leader-keys
     "pp"  'projectile-switch-project
+    "pf"  'projectile-find-file
     "pc"  'projectile-compile-project
     "pd"  'projectile-dired)
 
