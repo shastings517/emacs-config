@@ -15,8 +15,8 @@ The following variables are used to tweak some of the configuration pieces for u
   ;;       in Emacs and init.el will be generated automatically!
 
   ;; You will most likely need to adjust this font size for your system!
-  (defvar efs/default-font-size 120)
-  (defvar efs/default-variable-font-size 120)
+  (defvar efs/default-font-size 150)
+  (defvar efs/default-variable-font-size 150)
 
   ;; Make frame transparency overridable
   (defvar efs/frame-transparency '(99 . 99))
@@ -879,6 +879,18 @@ Emacs' built in commenting functionality =comment-dwim= (usually bound to =M-;=)
 
 #+end_src
 
+** Evil-surround
+
+surround in visual-state with S<textobject> or gS<textobject>. Or in normal-state with ys<textobject> or yS<textobject>.
+
+#+begin_src emacs-lisp
+
+(use-package evil-surround
+  :config
+  (global-evil-surround-mode 1))
+
+#+end_src
+
 ** Buffer Management
 
 #+begin_src emacs-lisp
@@ -1316,6 +1328,8 @@ For more thoughts on Eshell, check out these articles by Pierre Neidhardt:
 
     (eshell-git-prompt-use-theme 'powerline))
 
+;; NOTE: must set projectile root for this command to work
+;; to set project root run this command: projectile-add-known-project
 (use-package eshell-toggle
   :after eshell
   :bind ("C-M-'" . eshell-toggle)

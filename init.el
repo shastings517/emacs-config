@@ -2,8 +2,8 @@
 ;;       in Emacs and init.el will be generated automatically!
 
 ;; You will most likely need to adjust this font size for your system!
-(defvar efs/default-font-size 120)
-(defvar efs/default-variable-font-size 120)
+(defvar efs/default-font-size 150)
+(defvar efs/default-variable-font-size 150)
 
 ;; Make frame transparency overridable
 (defvar efs/frame-transparency '(99 . 99))
@@ -508,6 +508,10 @@
   :bind (("M-[" . er/expand-region)
          ("C-(" . er/mark-outside-pairs)))
 
+(use-package evil-surround
+  :config
+  (global-evil-surround-mode 1))
+
 ;; (use-package bufler
 ;;   :bind (("C-M-j" . bufler-switch-buffer))
 ;;   :config
@@ -791,6 +795,8 @@
 
     (eshell-git-prompt-use-theme 'powerline))
 
+;; NOTE: must set projectile root for this command to work
+;; to set project root run this command: projectile-add-known-project
 (use-package eshell-toggle
   :after eshell
   :bind ("C-M-'" . eshell-toggle)
@@ -831,3 +837,16 @@
 
 ;; Make gc pauses faster by decreasing the threshold.
 (setq gc-cons-threshold (* 2 1000 1000))
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(package-selected-packages
+   '(evil-surround yasnippet ws-butler which-key web-mode visual-fill-column use-package undo-fu typescript-mode smartparens rjsx-mode rainbow-delimiters pyvenv python-mode org-bullets no-littering magit lsp-ui lsp-ivy ivy-rich ivy-prescient helpful general flycheck expand-region exec-path-from-shell evil-org evil-nerd-commenter evil-iedit-state evil-escape evil-collection eshell-toggle eshell-git-prompt doom-themes doom-modeline dired-single dired-open dired-hide-dotfiles dashboard dap-mode counsel-projectile company-box command-log-mode auto-package-update all-the-icons-dired add-node-modules-path)))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
