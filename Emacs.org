@@ -15,8 +15,8 @@ The following variables are used to tweak some of the configuration pieces for u
   ;;       in Emacs and init.el will be generated automatically!
 
   ;; You will most likely need to adjust this font size for your system!
-  (defvar efs/default-font-size 150)
-  (defvar efs/default-variable-font-size 150)
+  (defvar efs/default-font-size 130)
+  (defvar efs/default-variable-font-size 130)
 
   ;; Make frame transparency overridable
   (defvar efs/frame-transparency '(99 . 99))
@@ -446,16 +446,16 @@ The =which-key= integration adds helpful descriptions of the various keys so you
 
 #+begin_src emacs-lisp
 
-  ;; (defun efs/lsp-mode-setup ()
-  ;;   (setq lsp-headerline-breadcrumb-segments '(path-up-to-project file symbols))
-  ;;   (lsp-headerline-breadcrumb-mode))
+    ;; (defun efs/lsp-mode-setup ()
+    ;;   (setq lsp-headerline-breadcrumb-segments '(path-up-to-project file symbols))
+    ;;   (lsp-headerline-breadcrumb-mode))
 
-   (use-package lsp-mode
+  (use-package lsp-mode
     :commands (lsp lsp-deferred)
     ;; :hook (lsp-mode . efs/lsp-mode-setup)
     :hook ((typescript-mode rjsx-mode js2-mode web-mode) . lsp)
     :bind (:map lsp-mode-map
-       ("TAB" . completion-at-point))
+        ("TAB" . completion-at-point))
     :init
     (setq lsp-keymap-prefix "C-c l")  ;; Or 'C-l', 's-l'
     :config
@@ -471,6 +471,8 @@ The =which-key= integration adds helpful descriptions of the various keys so you
     "le" 'lsp-ui-flycheck-list
     "lS" 'lsp-ui-sideline-mode
     "lX" 'lsp-execute-code-action)
+
+(setenv "TSSERVER_LOG_FILE" "/tmp/tsserver.log")
 
 #+end_src
 
@@ -578,27 +580,34 @@ This will install the [[https://github.com/theia-ide/typescript-language-server]
 
 #+begin_src emacs-lisp
 
-(use-package js2-mode
+  (use-package js2-mode
     :ensure t
     :mode "\\.js\\'"
     :config
     (setq-default js2-ignored-warnings '("msg.extra.trailing.comma")
                   js-indent-level 2))
 
-(use-package rjsx-mode
-  :ensure t
-  :mode(("\\.js\\'" . rjsx-mode)
-        ("\\.tsx\\'" . rjsx-mode)
-        ("\\.jsx\\'" . rjsx-mode)))
+  (use-package rjsx-mode
+    :ensure t
+    :mode(("\\.js\\'" . rjsx-mode)
+          ("\\.ts\\'" . rjsx-mode)
+          ("\\.tsx\\'" . rjsx-mode)
+          ("\\.jsx\\'" . rjsx-mode))
+    :init
+    (add-hook 'rjsx-mode-hook 'prettier-js-mode))
 
- (use-package web-mode
-  ;; :mode ("\\.html\\'")
-  :mode "(\\.\\(html?\\|ejs\\|tsx\\|jsx\\)\\'"
-  :config
-  (setq web-mode-markup-indent-offset 2))
+  (use-package web-mode
+    ;; :mode ("\\.html\\'")
+    :mode "(\\.\\(html?\\|ejs\\|tsx\\|jsx\\)\\'"
+    :config
+    (setq web-mode-markup-indent-offset 2))
   ;; (setq web-mode-engines-alist
-        ;; '(("django" . "focus/.*\\.html\\'")
-          ;; ("ctemplate" . "realtimecrm/.*\\.html\\'"))))
+  ;; '(("django" . "focus/.*\\.html\\'")
+  ;; ("ctemplate" . "realtimecrm/.*\\.html\\'"))))
+
+  ;; https://github.com/prettier/prettier-emacs
+  ;; minor mode that formats js on save
+  (use-package prettier-js)
 
 #+end_src
 
@@ -681,8 +690,8 @@ We also use [[https://github.com/sebastiencs/company-box][company-box]] to furth
     ("C-c p" . projectile-command-map)
     :init
     ;; NOTE: Set this to the folder where you keep your Git repos!
-    (when (file-directory-p "~/Projects/Code")
-      (setq projectile-project-search-path '("~/Projects/Code")))
+    (when (file-directory-p "~/Repositories")
+      (setq projectile-project-search-path '("~/Repositories")))
     (setq projectile-switch-project-action #'projectile-dired))
 
   (use-package counsel-projectile
@@ -801,6 +810,21 @@ Emacs' built in commenting functionality =comment-dwim= (usually bound to =M-;=)
 
 ** Ace-window
 
+*Useful key bindings:*
+
+- =x= - delete window
+- =m= - swap windows
+- =M= - move window
+- =c= - copy window
+- =j= - select buffer
+- =n= - select the previous window
+- =u= - select buffer in the other window
+- =c= - split window fairly, either vertically or horizontally
+- =v= - split window vertically
+- =b= - split window horizontally
+- =o= - maximize current window
+- =?= - show these command bindings
+
 #+begin_src emacs-lisp
 
 (use-package ace-window
@@ -882,7 +906,12 @@ Emacs' built in commenting functionality =comment-dwim= (usually bound to =M-;=)
 
 ** Evil-surround
 
-surround in visual-state with S<textobject> or gS<textobject>. Or in normal-state with ys<textobject> or yS<textobject>.
+*Useful key bindings:*
+
+- =S<textobject> OR gS<textobject>= - surround in visual-state
+- =ys<textobject> OR yS<textobject>= - surround in normal-state
+- =cs<old-textobject><new-textobject>= - change surrounding textobject
+- =ds<textobject>= - delete surrounding textobject
 
 #+begin_src emacs-lisp
 

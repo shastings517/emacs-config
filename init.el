@@ -2,8 +2,8 @@
 ;;       in Emacs and init.el will be generated automatically!
 
 ;; You will most likely need to adjust this font size for your system!
-(defvar efs/default-font-size 150)
-(defvar efs/default-variable-font-size 150)
+(defvar efs/default-font-size 130)
+(defvar efs/default-variable-font-size 130)
 
 ;; Make frame transparency overridable
 (defvar efs/frame-transparency '(99 . 99))
@@ -280,30 +280,32 @@
   (dashboard-setup-startup-hook))
 
 ;; (defun efs/lsp-mode-setup ()
-;;   (setq lsp-headerline-breadcrumb-segments '(path-up-to-project file symbols))
-;;   (lsp-headerline-breadcrumb-mode))
+    ;;   (setq lsp-headerline-breadcrumb-segments '(path-up-to-project file symbols))
+    ;;   (lsp-headerline-breadcrumb-mode))
 
- (use-package lsp-mode
-  :commands (lsp lsp-deferred)
-  ;; :hook (lsp-mode . efs/lsp-mode-setup)
-  :hook ((typescript-mode rjsx-mode js2-mode web-mode) . lsp)
-  :bind (:map lsp-mode-map
-     ("TAB" . completion-at-point))
-  :init
-  (setq lsp-keymap-prefix "C-c l")  ;; Or 'C-l', 's-l'
-  :config
-  (lsp-enable-which-key-integration t))
+  (use-package lsp-mode
+    :commands (lsp lsp-deferred)
+    ;; :hook (lsp-mode . efs/lsp-mode-setup)
+    :hook ((typescript-mode rjsx-mode js2-mode web-mode) . lsp)
+    :bind (:map lsp-mode-map
+        ("TAB" . completion-at-point))
+    :init
+    (setq lsp-keymap-prefix "C-c l")  ;; Or 'C-l', 's-l'
+    :config
+    (lsp-enable-which-key-integration t))
 
-(zmax/leader-keys
-  "l"  '(:ignore t :which-key "lsp")
-  "ld" 'xref-find-definitions
-  "lr" 'xref-find-references
-  "ln" 'lsp-ui-find-next-reference
-  "lp" 'lsp-ui-find-prev-reference
-  "ls" 'counsel-imenu
-  "le" 'lsp-ui-flycheck-list
-  "lS" 'lsp-ui-sideline-mode
-  "lX" 'lsp-execute-code-action)
+  (zmax/leader-keys
+    "l"  '(:ignore t :which-key "lsp")
+    "ld" 'xref-find-definitions
+    "lr" 'xref-find-references
+    "ln" 'lsp-ui-find-next-reference
+    "lp" 'lsp-ui-find-prev-reference
+    "ls" 'counsel-imenu
+    "le" 'lsp-ui-flycheck-list
+    "lS" 'lsp-ui-sideline-mode
+    "lX" 'lsp-execute-code-action)
+
+(setenv "TSSERVER_LOG_FILE" "/tmp/tsserver.log")
 
 (use-package lsp-ui
   :hook (lsp-mode . lsp-ui-mode)
@@ -343,26 +345,33 @@
   (setq typescript-indent-level 2))
 
 (use-package js2-mode
-    :ensure t
-    :mode "\\.js\\'"
-    :config
-    (setq-default js2-ignored-warnings '("msg.extra.trailing.comma")
-                  js-indent-level 2))
+  :ensure t
+  :mode "\\.js\\'"
+  :config
+  (setq-default js2-ignored-warnings '("msg.extra.trailing.comma")
+                js-indent-level 2))
 
 (use-package rjsx-mode
   :ensure t
   :mode(("\\.js\\'" . rjsx-mode)
+        ("\\.ts\\'" . rjsx-mode)
         ("\\.tsx\\'" . rjsx-mode)
-        ("\\.jsx\\'" . rjsx-mode)))
+        ("\\.jsx\\'" . rjsx-mode))
+  :init
+  (add-hook 'rjsx-mode-hook 'prettier-js-mode))
 
- (use-package web-mode
+(use-package web-mode
   ;; :mode ("\\.html\\'")
   :mode "(\\.\\(html?\\|ejs\\|tsx\\|jsx\\)\\'"
   :config
   (setq web-mode-markup-indent-offset 2))
-  ;; (setq web-mode-engines-alist
-        ;; '(("django" . "focus/.*\\.html\\'")
-          ;; ("ctemplate" . "realtimecrm/.*\\.html\\'"))))
+;; (setq web-mode-engines-alist
+;; '(("django" . "focus/.*\\.html\\'")
+;; ("ctemplate" . "realtimecrm/.*\\.html\\'"))))
+
+;; https://github.com/prettier/prettier-emacs
+;; minor mode that formats js on save
+(use-package prettier-js)
 
 (use-package python-mode
   :ensure t
@@ -402,8 +411,8 @@
   ("C-c p" . projectile-command-map)
   :init
   ;; NOTE: Set this to the folder where you keep your Git repos!
-  (when (file-directory-p "~/Projects/Code")
-    (setq projectile-project-search-path '("~/Projects/Code")))
+  (when (file-directory-p "~/Repositories")
+    (setq projectile-project-search-path '("~/Repositories")))
   (setq projectile-switch-project-action #'projectile-dired))
 
 (use-package counsel-projectile
