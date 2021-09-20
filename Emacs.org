@@ -638,6 +638,19 @@ There are a number of other language servers for Python so if you find that =pyl
     :config
     (require 'dap-python))
 
+  (use-package lsp-pyright
+    :hook (python-mode . (lambda ()
+                            (require 'lsp-pyright)
+                            (lsp-deferred)))
+    :init
+    (setq lsp-pyright-typechecking-mode "off")
+    (when (executable-find "python3")
+                  (setq lsp-pyright-python-executable-cmd "python3")))
+
+  (use-package blacken
+    :delight
+    :hook (python-mode . blacken-mode)
+    :custom (blacken-line-length 80))
 
 #+end_src
 
@@ -703,6 +716,15 @@ We also use [[https://github.com/sebastiencs/company-box][company-box]] to furth
     "pf"  'projectile-find-file
     "pc"  'projectile-compile-project
     "pd"  'projectile-dired)
+
+;;   (defun autoload-venv()
+;;     (cond
+;;     ((string= (projectile-project-name) "project_one")
+;;             (pyvenv-activate "~/.virtualenvs/proj1_venv"))
+;;     ((string= (projectile-project-name) "project_two")
+;;             (pyvenv-activate "~/project_two/proj2_venv"))))
+
+;; (add-hook 'projectile-after-switch-project-hook #'autoload-venv)
 
 #+end_src
 

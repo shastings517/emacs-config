@@ -384,6 +384,20 @@
   :config
   (require 'dap-python))
 
+(use-package lsp-pyright
+  :hook (python-mode . (lambda ()
+                          (require 'lsp-pyright)
+                          (lsp-deferred)))
+  :init
+  (setq lsp-pyright-typechecking-mode "off")
+  (when (executable-find "python3")
+                (setq lsp-pyright-python-executable-cmd "python3")))
+
+(use-package blacken
+  :delight
+  :hook (python-mode . blacken-mode)
+  :custom (blacken-line-length 80))
+
 (use-package pyvenv
   :after python-mode
   :config
@@ -404,26 +418,35 @@
   :hook (company-mode . company-box-mode))
 
 (use-package projectile
-  :diminish projectile-mode
-  :config (projectile-mode)
-  :custom ((projectile-completion-system 'ivy))
-  :bind-keymap
-  ("C-c p" . projectile-command-map)
-  :init
-  ;; NOTE: Set this to the folder where you keep your Git repos!
-  (when (file-directory-p "~/Repositories")
-    (setq projectile-project-search-path '("~/Repositories")))
-  (setq projectile-switch-project-action #'projectile-dired))
+    :diminish projectile-mode
+    :config (projectile-mode)
+    :custom ((projectile-completion-system 'ivy))
+    :bind-keymap
+    ("C-c p" . projectile-command-map)
+    :init
+    ;; NOTE: Set this to the folder where you keep your Git repos!
+    (when (file-directory-p "~/Repositories")
+      (setq projectile-project-search-path '("~/Repositories")))
+    (setq projectile-switch-project-action #'projectile-dired))
 
-(use-package counsel-projectile
-  :after projectile
-  :config (counsel-projectile-mode))
+  (use-package counsel-projectile
+    :after projectile
+    :config (counsel-projectile-mode))
 
-(zmax/leader-keys
-  "pp"  'projectile-switch-project
-  "pf"  'projectile-find-file
-  "pc"  'projectile-compile-project
-  "pd"  'projectile-dired)
+  (zmax/leader-keys
+    "pp"  'projectile-switch-project
+    "pf"  'projectile-find-file
+    "pc"  'projectile-compile-project
+    "pd"  'projectile-dired)
+
+;;   (defun autoload-venv()
+;;     (cond
+;;     ((string= (projectile-project-name) "project_one")
+;;             (pyvenv-activate "~/.virtualenvs/proj1_venv"))
+;;     ((string= (projectile-project-name) "project_two")
+;;             (pyvenv-activate "~/project_two/proj2_venv"))))
+
+;; (add-hook 'projectile-after-switch-project-hook #'autoload-venv)
 
 (use-package magit
   :commands (magit-status magit-get-current-branch)
