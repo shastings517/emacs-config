@@ -299,7 +299,7 @@
 
   (zmax/leader-keys
     "l"  '(:ignore t :which-key "lsp")
-    "ld" 'xref-find-definitions
+    "ld" 'xref-find-definitions-other-window
     "lr" 'xref-find-references
     "ln" 'lsp-ui-find-next-reference
     "lp" 'lsp-ui-find-prev-reference

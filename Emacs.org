@@ -115,50 +115,50 @@ This section configures basic UI settings that remove unneeded elements to make 
 
 #+begin_src emacs-lisp
 
-  (setq inhibit-startup-message t)
+    (setq inhibit-startup-message t)
 
-  (scroll-bar-mode -1)        ; Disable visible scrollbar
-  (tool-bar-mode -1)          ; Disable the toolbar
-  (tooltip-mode -1)           ; Disable tooltips
-  (set-fringe-mode 10)        ; Give some breathing room
+    (scroll-bar-mode -1)        ; Disable visible scrollbar
+    (tool-bar-mode -1)          ; Disable the toolbar
+    (tooltip-mode -1)           ; Disable tooltips
+    (set-fringe-mode 10)        ; Give some breathing room
 
-  (menu-bar-mode -1)            ; Disable the menu bar
+    (menu-bar-mode -1)            ; Disable the menu bar
 
-  ;; disable emacs bell
-  (setq ring-bell-function 'ignore)
+    ;; disable emacs bell
+    (setq ring-bell-function 'ignore)
 
-  (column-number-mode)
-  (global-display-line-numbers-mode t)
+    (column-number-mode)
+    (global-display-line-numbers-mode t)
 
-  ;; Set frame transparency
-  (set-frame-parameter (selected-frame) 'alpha efs/frame-transparency)
-  (add-to-list 'default-frame-alist `(alpha . ,efs/frame-transparency))
-  (set-frame-parameter (selected-frame) 'fullscreen 'maximized)
-  (add-to-list 'default-frame-alist '(fullscreen . maximized))
+    ;; Set frame transparency
+    (set-frame-parameter (selected-frame) 'alpha efs/frame-transparency)
+    (add-to-list 'default-frame-alist `(alpha . ,efs/frame-transparency))
+    (set-frame-parameter (selected-frame) 'fullscreen 'maximized)
+    (add-to-list 'default-frame-alist '(fullscreen . maximized))
 
-  ;; Disable line numbers for some modes
-  (dolist (mode '(org-mode-hook
-                  term-mode-hook
-                  shell-mode-hook
-                  treemacs-mode-hook
-                  eshell-mode-hook))
-    (add-hook mode (lambda () (display-line-numbers-mode 0))))
+    ;; Disable line numbers for some modes
+    (dolist (mode '(org-mode-hook
+                    term-mode-hook
+                    shell-mode-hook
+                    treemacs-mode-hook
+                    eshell-mode-hook))
+      (add-hook mode (lambda () (display-line-numbers-mode 0))))
 
-(setq insert-directory-program "gls" dired-use-ls-dired t)
-(setq dired-listing-switches "-al --group-directories-first")
+  (setq insert-directory-program "gls" dired-use-ls-dired t)
+  (setq dired-listing-switches "-al --group-directories-first")
 
-;; https://github.com/purcell/exec-path-from-shell
-;; fix emacs path on mac
-(use-package exec-path-from-shell
-  :if (memq window-system '(mac ns x))
-  :config
-  (exec-path-from-shell-initialize))
+  ;; https://github.com/purcell/exec-path-from-shell
+  ;; fix emacs path on mac
+  (use-package exec-path-from-shell
+    :if (memq window-system '(mac ns x))
+    :config
+    (exec-path-from-shell-initialize))
 
-;; https://github.com/codesuki/add-node-modules-path/tree/master
-;; adds the node_modules/.bin directory to the buffer exec_path. E.g. support project local eslint installations.
-(use-package add-node-modules-path
-  :hook ((js2-mode . add-node-modules-path)
-         (rjsx-mode . add-node-modules-path)))
+  ;; https://github.com/codesuki/add-node-modules-path/tree/master
+  ;; adds the node_modules/.bin directory to the buffer exec_path. E.g. support project local eslint installations.
+  (use-package add-node-modules-path
+    :hook ((js2-mode . add-node-modules-path)
+           (rjsx-mode . add-node-modules-path)))
 
 #+end_src
 
@@ -466,7 +466,7 @@ The =which-key= integration adds helpful descriptions of the various keys so you
 
   (zmax/leader-keys
     "l"  '(:ignore t :which-key "lsp")
-    "ld" 'xref-find-definitions
+    "ld" 'xref-find-definitions-other-window
     "lr" 'xref-find-references
     "ln" 'lsp-ui-find-next-reference
     "lp" 'lsp-ui-find-prev-reference
