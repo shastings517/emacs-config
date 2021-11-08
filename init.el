@@ -147,6 +147,8 @@
     "s"  '(:ignore t :which-key "search")
     "sp"  '(counsel-projectile-ag :which-key "search project")
     "se"  '(evil-iedit-state/iedit-mode :which-key "evil iedit")
+    "v"  '(:ignore t :which-key "virtual env")
+    "vw"  '(pyvenv-workon :which-key "workon env")
     "w"  '(:ignore t :which-key "window")
     "w/"  '(split-window-right :which-key "split right")
     "w-"  '(split-window-below :which-key "split bottom")
@@ -183,9 +185,10 @@
 
   ;; https://github.com/syl20bnr/evil-escape
   ;; customizable key sequence to escape states
-  (use-package evil-escape
+(use-package evil-escape
+  :init
+  (setq evil-want-keybinding nil)
   :after evil
-  :ensure t
   :config
   (progn
       (evil-escape-mode)
@@ -195,7 +198,7 @@
   :commands command-log-mode)
 
 (use-package doom-themes
-  :init (load-theme 'doom-palenight t))
+  :init (load-theme 'doom-gruvbox t))
 
 (use-package all-the-icons)
 
