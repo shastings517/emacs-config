@@ -480,7 +480,7 @@ The =which-key= integration adds helpful descriptions of the various keys so you
     "lX" 'lsp-execute-code-action)
 
 (setenv "TSSERVER_LOG_FILE" "/tmp/tsserver.log")
-
+(setq read-process-output-max (* 1024 1024))
 #+end_src
 
 **** lsp-ui
