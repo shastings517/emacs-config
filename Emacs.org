@@ -220,6 +220,7 @@ This configuration uses [[https://evil.readthedocs.io/en/latest/index.html][evil
       "s"  '(:ignore t :which-key "search")
       "sp"  '(counsel-projectile-ag :which-key "search project")
       "se"  '(evil-iedit-state/iedit-mode :which-key "evil iedit")
+      "sd"  '(rgrep :which-key "rgrep")
       "v"  '(:ignore t :which-key "virtual env")
       "vw"  '(pyvenv-workon :which-key "workon env")
       "w"  '(:ignore t :which-key "window")
@@ -452,35 +453,35 @@ The =which-key= integration adds helpful descriptions of the various keys so you
 
 #+begin_src emacs-lisp
 
-    ;; (defun efs/lsp-mode-setup ()
-    ;;   (setq lsp-headerline-breadcrumb-segments '(path-up-to-project file symbols))
-    ;;   (lsp-headerline-breadcrumb-mode))
+      ;; (defun efs/lsp-mode-setup ()
+      ;;   (setq lsp-headerline-breadcrumb-segments '(path-up-to-project file symbols))
+      ;;   (lsp-headerline-breadcrumb-mode))
 
-  (use-package lsp-mode
-    :commands (lsp lsp-deferred)
-    ;; :hook (lsp-mode . efs/lsp-mode-setup)
-    :hook ((typescript-mode rjsx-mode js2-mode web-mode) . lsp)
-    :bind (:map lsp-mode-map
-        ("TAB" . completion-at-point))
-    :init
-    (setq lsp-keymap-prefix "C-c l")  ;; Or 'C-l', 's-l'
-    :config
-    (lsp-enable-which-key-integration t))
+    (use-package lsp-mode
+      :commands (lsp lsp-deferred)
+      ;; :hook (lsp-mode . efs/lsp-mode-setup)
+      :hook ((typescript-mode rjsx-mode js2-mode web-mode) . lsp)
+      :bind (:map lsp-mode-map
+          ("TAB" . completion-at-point))
+      :init
+      (setq lsp-keymap-prefix "C-c l")  ;; Or 'C-l', 's-l'
+      (setq read-process-output-max (* 1024 1024))
+      :config
+      (lsp-enable-which-key-integration t))
 
-  (zmax/leader-keys
-    "l"  '(:ignore t :which-key "lsp")
-    "ldo" 'xref-find-definitions-other-window
-    "ldd" 'xref-find-definitions
-    "lr" 'xref-find-references
-    "ln" 'lsp-ui-find-next-reference
-    "lp" 'lsp-ui-find-prev-reference
-    "ls" 'counsel-imenu
-    "le" 'lsp-ui-flycheck-list
-    "lS" 'lsp-ui-sideline-mode
-    "lX" 'lsp-execute-code-action)
+    (zmax/leader-keys
+      "l"  '(:ignore t :which-key "lsp")
+      "ldo" 'xref-find-definitions-other-window
+      "ldd" 'xref-find-definitions
+      "lr" 'xref-find-references
+      "ln" 'lsp-ui-find-next-reference
+      "lp" 'lsp-ui-find-prev-reference
+      "ls" 'counsel-imenu
+      "le" 'lsp-ui-flycheck-list
+      "lS" 'lsp-ui-sideline-mode
+      "lX" 'lsp-execute-code-action)
 
-(setenv "TSSERVER_LOG_FILE" "/tmp/tsserver.log")
-(setq read-process-output-max (* 1024 1024))
+  (setenv "TSSERVER_LOG_FILE" "/tmp/tsserver.log")
 #+end_src
 
 **** lsp-ui
