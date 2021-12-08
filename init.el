@@ -147,6 +147,7 @@
     "s"  '(:ignore t :which-key "search")
     "sp"  '(counsel-projectile-ag :which-key "search project")
     "se"  '(evil-iedit-state/iedit-mode :which-key "evil iedit")
+    "sd"  '(rgrep :which-key "rgrep")
     "v"  '(:ignore t :which-key "virtual env")
     "vw"  '(pyvenv-workon :which-key "workon env")
     "w"  '(:ignore t :which-key "window")
@@ -297,6 +298,7 @@
         ("TAB" . completion-at-point))
     :init
     (setq lsp-keymap-prefix "C-c l")  ;; Or 'C-l', 's-l'
+    (setq read-process-output-max (* 1024 1024))
     :config
     (lsp-enable-which-key-integration t))
 
